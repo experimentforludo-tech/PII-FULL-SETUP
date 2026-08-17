@@ -3,5 +3,11 @@
   publish = "."
 
 [build.environment]
-  # API_URL will be set from Netlify dashboard environment variables.
-  # No need to define here.
+  NODE_VERSION = "18"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
