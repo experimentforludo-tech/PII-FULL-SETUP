@@ -8,33 +8,79 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
-// CORS
-app.use(
-  cors({
-    origin:
-      config.allowedOrigins.includes('*')
-        ? '*'
-        : (origin, callback) => {
-            if (!origin || config.allowedOrigins.includes(origin)) return callback(null, true);
-            callback(new Error(`Origin ${origin} not allowed by CORS`));
-          },
-  })
-);
+// CORS - Allow all origins for now
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.use(express.json({ limit: '1mb' }));
 
-// Health check
-app.get('/health', (_req, res) => res.json({ ok: true }));
+// Simple request logging
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
+
+// Health check endpoint
+app.get('/health', (_req, res) => {
+  res.json({ 
+    ok: true, 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// Root endpoint
+app.get('/', (_req, res) => {
+  res.json({ 
+    message: 'Pi Wallet Balance Checker API',
+    status: 'running',
+    endpoints: ['/health', '/api/check-balances']
+  });
+});
 
 // Routes
 app.use('/api', balanceRoutes);
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
 
 // Error handler
 app.use(errorHandler);
 
 // Connect to DB and start server
-connectDB().then(() => {
-  app.listen(config.port, () => {
-    console.log(`Pi balance checker listening on port ${config.port}`);
-  });
-});
+const startServer = async () => {
+  try {
+    await connectDB();
+    const server = app.listen(config.port, '0.0.0.0', () => {
+      console.log(`🚀 Pi balance checker listening on port ${config.port}`);
+    });
+
+    // Graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM received: closing server');
+      server.close(() => {
+        console.log('Server closed');
+        process.exit(0);
+      });
+    });
+
+    process.on('SIGINT', () => {
+      console.log('SIGINT received: closing server');
+      server.close(() => {
+        console.log('Server closed');
+        process.exit(0);
+      });
+    });
+
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
