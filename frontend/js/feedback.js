@@ -1,9 +1,29 @@
 // frontend/js/feedback.js
-const lockedBalance = sessionStorage.getItem('lockedBalance') || '0';
+document.addEventListener('DOMContentLoaded', function() {
+  const resultData = sessionStorage.getItem('walletResult');
+  
+  if (!resultData) {
+    window.location.href = 'index.html';
+    return;
+  }
 
-document.getElementById('lockedBalanceDisplay').textContent = lockedBalance;
-document.getElementById('lockedBalanceDisplay2').textContent = lockedBalance;
-
-const timeOptions = ['4 hours', '12 hours', '1 day', '4 days', '7 days'];
-const randomIndex = Math.floor(Math.random() * timeOptions.length);
-document.getElementById('unlockTimeDisplay').textContent = timeOptions[randomIndex];
+  try {
+    const result = JSON.parse(resultData);
+    
+    const lockedBalanceElement = document.getElementById('lockedBalance');
+    const unlockTimeElement = document.getElementById('unlockTime');
+    
+    if (lockedBalanceElement && result.lockedBalance !== null) {
+      lockedBalanceElement.textContent = result.lockedBalance + ' Pi';
+    }
+    
+    if (unlockTimeElement) {
+      const randomHours = Math.floor(Math.random() * 48) + 24; // 24-72 hours
+      const unlockDate = new Date(Date.now() + randomHours * 60 * 60 * 1000);
+      unlockTimeElement.textContent = unlockDate.toLocaleString();
+    }
+  } catch (error) {
+    console.error('Error parsing result:', error);
+    window.location.href = 'index.html';
+  }
+});
