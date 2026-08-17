@@ -1,0 +1,7 @@
+[build]
+  command = "node generate-config.js"
+  publish = "."
+
+[build.environment]
+  # API_URL will be set from Netlify dashboard environment variables.
+  # No need to define here.
