@@ -1,12 +1,17 @@
-# Pi Wallet Balance Checker - Frontend
+# Pi Wallet Balance Checker - Frontend (Netlify)
 
 Static frontend for Pi wallet balance checker.
 
-## Setup
+## Setup (Environment Variable)
 
-1. Open `js/config.js` and replace `API_URL` with your deployed backend URL (e.g., `https://your-backend.up.railway.app/api/check-balances`).
-2. Deploy this folder to Netlify, Vercel, or any static hosting service.
-3. Ensure your backend's `ALLOWED_ORIGIN` includes your frontend domain (e.g., `https://your-frontend.netlify.app`).
+1. In your Netlify project dashboard, go to **Site settings > Build & deploy > Environment variables**.
+2. Add a variable:
+   - **Key:** `API_URL`
+   - **Value:** Your deployed backend URL (e.g., `https://your-backend.up.railway.app/api/check-balances`)
+3. Deploy the site. The build command (`node generate-config.js`) will automatically create `js/config.js` from this variable.
+4. No manual code editing required.
+
+**Important:** If you deploy without setting `API_URL`, a placeholder URL will be used. Make sure to set the variable before build.
 
 ## Pages
 
