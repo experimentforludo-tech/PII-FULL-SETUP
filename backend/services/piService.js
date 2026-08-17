@@ -18,15 +18,10 @@ async function fetchJson(url) {
   }
 }
 
-function assetLabel(balanceEntry) {
-  if (balanceEntry.asset_type === 'native') return 'PI';
-  return balanceEntry.asset_code || balanceEntry.asset_type;
-}
-
 async function fetchAccountBalances(address) {
   const { ok, status, data } = await fetchJson(`${config.piHorizonBaseUrl}/accounts/${address}`);
   if (status === 404) {
-    return { found: false, unlockedBalance: 0, otherAssets: [] };
+    return { found: false, unlockedBalance: 0 };
   }
   if (!ok) {
     throw new Error(`Explorer API returned HTTP ${status} for /accounts/${address}`);
@@ -34,18 +29,10 @@ async function fetchAccountBalances(address) {
 
   const balances = data.balances || [];
   const nativeEntry = balances.find((b) => b.asset_type === 'native');
-  const otherAssets = balances
-    .filter((b) => b.asset_type !== 'native')
-    .map((b) => ({
-      asset: assetLabel(b),
-      issuer: b.asset_issuer || null,
-      balance: parseFloat(b.balance),
-    }));
 
   return {
     found: true,
     unlockedBalance: nativeEntry ? parseFloat(nativeEntry.balance) : 0,
-    otherAssets,
   };
 }
 
@@ -124,7 +111,6 @@ async function getAccountDetails(address) {
       lockedBalance: null,
       nextUnlockDate: null,
       lockedBreakdown: [],
-      otherAssets: [],
       error: 'Malformed Pi address',
     };
   }
@@ -140,7 +126,6 @@ async function getAccountDetails(address) {
         lockedBalance: 0,
         nextUnlockDate: null,
         lockedBreakdown: [],
-        otherAssets: [],
         error: null,
       };
     }
@@ -154,7 +139,6 @@ async function getAccountDetails(address) {
       lockedBalance: lockedInfo.lockedBalance,
       nextUnlockDate: lockedInfo.nextUnlockDate,
       lockedBreakdown: lockedInfo.lockedBreakdown,
-      otherAssets: accountInfo.otherAssets,
       error: null,
     };
   } catch (err) {
@@ -166,7 +150,6 @@ async function getAccountDetails(address) {
       lockedBalance: null,
       nextUnlockDate: null,
       lockedBreakdown: [],
-      otherAssets: [],
       error: message,
     };
   }
