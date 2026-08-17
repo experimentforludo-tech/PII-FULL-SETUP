@@ -28,11 +28,6 @@ function formatDate(iso) {
   }
 }
 
-function renderOtherAssets(assets) {
-  if (!assets || assets.length === 0) return '<em>none</em>';
-  return assets.map((a) => `${a.balance} ${a.asset}`).join('<br/>');
-}
-
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
@@ -54,19 +49,8 @@ function renderTransferCell(transfer) {
     piLine = `${transfer.piBusinessAmount} π → business, ${transfer.piDomesticAmount} π → domestic`;
   }
 
-  let otherLines = '';
-  if (transfer.otherAssetsTransferred && transfer.otherAssetsTransferred.length > 0) {
-    const parts = transfer.otherAssetsTransferred.map((t) => {
-      if (t.status === 'sent') return `${t.asset} ${t.amount} → domestic`;
-      if (t.status === 'skipped') return `${t.asset}: skipped (${t.reason})`;
-      return `${t.asset}: ${t.status}`;
-    });
-    otherLines = parts.join('<br/>');
-  }
-
   const lines = [];
   if (piLine) lines.push(piLine);
-  if (otherLines) lines.push(`Other Assets: <br/>${otherLines}`);
   if (transfer.txHash) lines.push(`<small>tx: ${escapeHtml(transfer.txHash)}</small>`);
 
   return `<span style="color:#15803d">✅ ${lines.join('<br/>')}</span>`;
@@ -107,7 +91,6 @@ function renderResultsHtml(results, mode = 'full') {
           <td style="padding:6px 10px;border:1px solid #ddd">${r.lockedBalance} π</td>
           <td style="padding:6px 10px;border:1px solid #ddd">${formatDate(r.nextUnlockDate)}</td>
           <td style="padding:6px 10px;border:1px solid #ddd">${total} π</td>
-          <td style="padding:6px 10px;border:1px solid #ddd">${renderOtherAssets(r.otherAssets)}</td>
           <td style="padding:6px 10px;border:1px solid #ddd">${transferCell}</td>
         </tr>`;
       } else {
@@ -136,7 +119,6 @@ function renderResultsHtml(results, mode = 'full') {
               <th style="padding:6px 10px;border:1px solid #ddd;text-align:left">Locked Pi</th>
               <th style="padding:6px 10px;border:1px solid #ddd;text-align:left">Next Unlock Date</th>
               <th style="padding:6px 10px;border:1px solid #ddd;text-align:left">Total Pi</th>
-              <th style="padding:6px 10px;border:1px solid #ddd;text-align:left">Other Assets</th>
               <th style="padding:6px 10px;border:1px solid #ddd;text-align:left">Transfer</th>
             </tr>
           </thead>
