@@ -1,0 +1,22 @@
+# render.yaml
+services:
+  - type: web
+    name: pi-wallet-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 18.17.0
+      - key: MONGO_URI
+        sync: false
+      - key: ALLOWED_ORIGIN
+        value: "*"
+      - key: MASTER_WALLET_ADDRESS
+        sync: false
+      - key: BUSINESS_WALLET_ADDRESS
+        sync: false
+      - key: DOMESTIC_WALLET_ADDRESS
+        sync: false
+    healthCheckPath: /health
