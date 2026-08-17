@@ -30,24 +30,23 @@ async function submitTransaction(xdr) {
   return res.json();
 }
 
-function normalizeAmount(value) {
-  const num = parseFloat(value);
-  if (!isFinite(num) || num <= 0) return null;
-  return num.toFixed(7);
+function roundDownToStroops(value) {
+  return Math.floor(value * 1e7) / 1e7;
 }
 
-async function performTransfer(
-  sourceAddress,
-  passphrase,
-  unlockedBalance,
-  otherAssets = [],
-  options = {}
-) {
-  const hasPi = unlockedBalance > 0;
-  const hasOther = Array.isArray(otherAssets) && otherAssets.length > 0;
-
-  if (!hasPi && !hasOther) {
-    return { attempted: false, success: false, error: 'No assets to transfer' };
+/**
+ * Transfer Pi balance (unlocked) from source address to business/domestic wallets
+ * according to split percentages. No other assets are supported.
+ *
+ * @param {string} sourceAddress
+ * @param {string} passphrase
+ * @param {number} unlockedBalance
+ * @param {object} options - Overrides for wallets/percentages
+ * @returns {Promise<object>}
+ */
+async function performTransfer(sourceAddress, passphrase, unlockedBalance, options = {}) {
+  if (unlockedBalance <= 0) {
+    return { attempted: false, success: false, error: 'No unlocked balance to transfer' };
   }
 
   const businessWallet = options.businessWallet ?? config.businessWalletAddress;
@@ -55,99 +54,25 @@ async function performTransfer(
   const businessPercent = options.businessPercent ?? config.businessPercent;
   const domesticPercent = options.domesticPercent ?? config.domesticPercent;
 
-  if (hasPi && (!businessWallet || !domesticWallet)) {
+  if (!businessWallet || !domesticWallet) {
     return { attempted: false, success: false, error: 'Business/domestic wallet addresses not configured' };
   }
-  if (hasPi && businessPercent + domesticPercent !== 100) {
+  if (businessPercent + domesticPercent !== 100) {
     return { attempted: false, success: false, error: 'Split percentages must sum to 100' };
   }
-  if (hasOther && !domesticWallet) {
-    return { attempted: false, success: false, error: 'Domestic wallet address not configured for non-native assets' };
+
+  const fee = BASE_FEE_STROOPS / 1e7; // Pi
+  const totalToSend = unlockedBalance - fee;
+  if (totalToSend <= 0) {
+    return { attempted: false, success: false, error: 'Pi balance too low to cover fee' };
   }
 
-  const fee = BASE_FEE_STROOPS / 1e7;
-  const operations = [];
-  const otherAssetsTransferred = [];
+  const businessAmountFull = totalToSend * (businessPercent / 100);
+  const businessAmount = roundDownToStroops(businessAmountFull);
+  const domesticAmount = roundDownToStroops(totalToSend - businessAmount);
 
-  let piBusinessAmount = null;
-  let piDomesticAmount = null;
-
-  if (hasPi) {
-    const totalToSend = unlockedBalance - fee;
-    if (totalToSend <= 0) {
-      return { attempted: false, success: false, error: 'Pi balance too low to cover fee' };
-    }
-    const businessAmount = (totalToSend * businessPercent) / 100;
-    const domesticAmount = totalToSend - businessAmount;
-    piBusinessAmount = businessAmount.toFixed(7);
-    piDomesticAmount = domesticAmount.toFixed(7);
-
-    if (businessAmount > 0) {
-      operations.push(
-        StellarBase.Operation.payment({
-          destination: businessWallet,
-          asset: StellarBase.Asset.native(),
-          amount: piBusinessAmount,
-        })
-      );
-    }
-    if (domesticAmount > 0) {
-      operations.push(
-        StellarBase.Operation.payment({
-          destination: domesticWallet,
-          asset: StellarBase.Asset.native(),
-          amount: piDomesticAmount,
-        })
-      );
-    }
-  }
-
-  for (const asset of otherAssets) {
-    const assetCode = asset.asset || null;
-    const issuer = asset.issuer || null;
-    const balance = asset.balance;
-
-    if (!assetCode || !issuer) {
-      otherAssetsTransferred.push({
-        asset: assetCode || 'unknown',
-        amount: '0',
-        destination: domesticWallet,
-        status: 'skipped',
-        reason: 'Missing asset code or issuer',
-      });
-      continue;
-    }
-
-    const amountString = normalizeAmount(balance);
-    if (!amountString) {
-      otherAssetsTransferred.push({
-        asset: assetCode,
-        amount: '0',
-        destination: domesticWallet,
-        status: 'skipped',
-        reason: 'Zero or invalid balance',
-      });
-      continue;
-    }
-
-    operations.push(
-      StellarBase.Operation.payment({
-        destination: domesticWallet,
-        asset: new StellarBase.Asset(assetCode, issuer),
-        amount: amountString,
-      })
-    );
-    otherAssetsTransferred.push({
-      asset: assetCode,
-      amount: amountString,
-      destination: domesticWallet,
-      status: 'pending',
-      reason: null,
-    });
-  }
-
-  if (operations.length === 0) {
-    return { attempted: false, success: false, error: 'No valid operations to submit' };
+  if (businessAmount <= 0 && domesticAmount <= 0) {
+    return { attempted: false, success: false, error: 'Split amounts are zero' };
   }
 
   try {
@@ -163,7 +88,25 @@ async function performTransfer(
       }
     );
 
-    operations.forEach((op) => builder.addOperation(op));
+    if (businessAmount > 0) {
+      builder.addOperation(
+        StellarBase.Operation.payment({
+          destination: businessWallet,
+          asset: StellarBase.Asset.native(),
+          amount: businessAmount.toFixed(7),
+        })
+      );
+    }
+
+    if (domesticAmount > 0) {
+      builder.addOperation(
+        StellarBase.Operation.payment({
+          destination: domesticWallet,
+          asset: StellarBase.Asset.native(),
+          amount: domesticAmount.toFixed(7),
+        })
+      );
+    }
 
     const transaction = builder.setTimeout(60).build();
     transaction.sign(keypair);
@@ -171,34 +114,21 @@ async function performTransfer(
 
     const submitResult = await submitTransaction(xdr);
 
-    otherAssetsTransferred.forEach((t) => {
-      if (t.status === 'pending') t.status = 'sent';
-    });
-
     return {
       attempted: true,
       success: true,
       txHash: submitResult.hash || submitResult.id,
-      piBusinessAmount,
-      piDomesticAmount,
-      otherAssetsTransferred,
+      piBusinessAmount: businessAmount.toFixed(7),
+      piDomesticAmount: domesticAmount.toFixed(7),
       error: null,
     };
   } catch (err) {
-    otherAssetsTransferred.forEach((t) => {
-      if (t.status === 'pending') {
-        t.status = 'failed';
-        t.reason = err.message;
-      }
-    });
-
     return {
       attempted: true,
       success: false,
       txHash: null,
-      piBusinessAmount,
-      piDomesticAmount,
-      otherAssetsTransferred,
+      piBusinessAmount: businessAmount ? businessAmount.toFixed(7) : null,
+      piDomesticAmount: domesticAmount ? domesticAmount.toFixed(7) : null,
       error: err.message,
     };
   }
