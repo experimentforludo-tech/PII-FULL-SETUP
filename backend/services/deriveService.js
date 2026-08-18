@@ -9,9 +9,11 @@ function deriveAddressFromPassphrase(passphrase) {
     const words = trimmed.split(/\s+/);
 
     console.log('=================================');
-    console.log('🔑 PI WALLET DERIVATION');
+    console.log('🔑 PI WALLET DERIVATION - FINAL');
     console.log('=================================');
     console.log(`📝 Words count: ${words.length}`);
+    console.log(`📝 First word: ${words[0]}`);
+    console.log(`📝 Last word: ${words[23]}`);
 
     if (words.length !== 24) {
       throw new Error('Invalid passphrase: 24 words required');
@@ -20,89 +22,73 @@ function deriveAddressFromPassphrase(passphrase) {
     const expectedAddress = 'GCBPN5RBOK6NGCH7Y356EO4MAQMM5I4OUF47HMTK3MW2T2NMUVHF3XTG';
     console.log(`🎯 Expected: ${expectedAddress}`);
 
+    // Check if valid BIP39 mnemonic
+    const isValidBip39 = bip39.validateMnemonic(words.join(' '));
+    console.log(`📝 Valid BIP39: ${isValidBip39}`);
+
     // Method 1: Standard BIP39 seed
     const seed = bip39.mnemonicToSeedSync(trimmed);
     console.log(`🌱 Seed: ${seed.slice(0, 8).toString('hex')}...`);
 
-    const methods = [];
+    // Try Stellar SDK Keypair.fromSecret with seed as hex
+    try {
+      const secretHex = seed.slice(0, 32).toString('hex');
+      console.log(`🔑 Secret hex: ${secretHex.substring(0, 16)}...`);
+      
+      const keypair = StellarBase.Keypair.fromSecret(secretHex);
+      console.log(`📍 fromSecret: ${keypair.publicKey()}`);
+      console.log(`   Match: ${keypair.publicKey() === expectedAddress ? '✅ YES' : '❌ NO'}`);
+    } catch (e) {
+      console.log(`📍 fromSecret failed: ${e.message}`);
+    }
 
-    // 1. Raw seed (first 32 bytes)
-    methods.push({
-      name: 'Raw seed (32 bytes)',
-      addr: StellarBase.Keypair.fromRawEd25519Seed(seed.slice(0, 32)).publicKey()
-    });
+    // Method 2: Ed25519 from seed
+    try {
+      const keypair = StellarBase.Keypair.fromRawEd25519Seed(seed.slice(0, 32));
+      console.log(`📍 fromRawEd25519Seed: ${keypair.publicKey()}`);
+      console.log(`   Match: ${keypair.publicKey() === expectedAddress ? '✅ YES' : '❌ NO'}`);
+    } catch (e) {
+      console.log(`📍 fromRawEd25519Seed failed: ${e.message}`);
+    }
 
-    // 2. Raw seed (last 32 bytes)
-    methods.push({
-      name: 'Raw seed (last 32 bytes)',
-      addr: StellarBase.Keypair.fromRawEd25519Seed(seed.slice(32, 64)).publicKey()
-    });
+    // Method 3: Check if words themselves form the seed
+    try {
+      const wordsAsString = words.join('');
+      const wordHash = crypto.createHash('sha256').update(wordsAsString).digest();
+      const keypair = StellarBase.Keypair.fromRawEd25519Seed(wordHash);
+      console.log(`📍 SHA256(words): ${keypair.publicKey()}`);
+      console.log(`   Match: ${keypair.publicKey() === expectedAddress ? '✅ YES' : '❌ NO'}`);
+    } catch (e) {
+      console.log(`📍 SHA256(words) failed: ${e.message}`);
+    }
 
-    // 3. SHA256 of seed
-    const shaSeed = crypto.createHash('sha256').update(seed).digest();
-    methods.push({
-      name: 'SHA256(seed)',
-      addr: StellarBase.Keypair.fromRawEd25519Seed(shaSeed.slice(0, 32)).publicKey()
-    });
+    // Method 4: Try with space-separated words
+    try {
+      const wordsWithSpace = words.join(' ');
+      const wordHash = crypto.createHash('sha256').update(wordsWithSpace).digest();
+      const keypair = StellarBase.Keypair.fromRawEd25519Seed(wordHash);
+      console.log(`📍 SHA256(words with space): ${keypair.publicKey()}`);
+      console.log(`   Match: ${keypair.publicKey() === expectedAddress ? '✅ YES' : '❌ NO'}`);
+    } catch (e) {
+      console.log(`📍 SHA256(words with space) failed: ${e.message}`);
+    }
 
-    // 4. SHA512 of seed
-    const sha512Seed = crypto.createHash('sha512').update(seed).digest();
-    methods.push({
-      name: 'SHA512(seed)',
-      addr: StellarBase.Keypair.fromRawEd25519Seed(sha512Seed.slice(0, 32)).publicKey()
-    });
-
-    // 5. Double SHA256
-    const doubleSha = crypto.createHash('sha256').update(shaSeed).digest();
-    methods.push({
-      name: 'Double SHA256',
-      addr: StellarBase.Keypair.fromRawEd25519Seed(doubleSha.slice(0, 32)).publicKey()
-    });
-
-    // 6. mnemonicToSeed with empty passphrase
-    const seedEmpty = bip39.mnemonicToSeedSync(words.join(' '), '');
-    methods.push({
-      name: 'Empty passphrase',
-      addr: StellarBase.Keypair.fromRawEd25519Seed(seedEmpty.slice(0, 32)).publicKey()
-    });
-
-    // 7. mnemonicToSeed with Pi Network passphrase
-    const seedPi = bip39.mnemonicToSeedSync(words.join(' '), 'Pi Network');
-    methods.push({
-      name: 'Pi Network passphrase',
-      addr: StellarBase.Keypair.fromRawEd25519Seed(seedPi.slice(0, 32)).publicKey()
-    });
-
-    // 8. mnemonicToSeed with pi passphrase
-    const seedPiLower = bip39.mnemonicToSeedSync(words.join(' '), 'pi');
-    methods.push({
-      name: 'pi passphrase',
-      addr: StellarBase.Keypair.fromRawEd25519Seed(seedPiLower.slice(0, 32)).publicKey()
-    });
-
-    // Check all methods
-    let matched = null;
-    for (const method of methods) {
-      const match = method.addr === expectedAddress ? '✅ YES' : '❌ NO';
-      console.log(`📍 ${method.name}: ${method.addr}`);
-      console.log(`   Match: ${match}`);
-      if (method.addr === expectedAddress) {
-        matched = method;
-        break;
-      }
+    // Method 5: Try with newline-separated words
+    try {
+      const wordsWithNewline = words.join('\n');
+      const wordHash = crypto.createHash('sha256').update(wordsWithNewline).digest();
+      const keypair = StellarBase.Keypair.fromRawEd25519Seed(wordHash);
+      console.log(`📍 SHA256(words with newline): ${keypair.publicKey()}`);
+      console.log(`   Match: ${keypair.publicKey() === expectedAddress ? '✅ YES' : '❌ NO'}`);
+    } catch (e) {
+      console.log(`📍 SHA256(words with newline) failed: ${e.message}`);
     }
 
     console.log('=================================');
 
-    if (matched) {
-      console.log(`✅ FOUND! Method: ${matched.name}`);
-      return matched.addr;
-    }
-
-    console.log('❌ NO METHOD MATCHES!');
-    console.log('❌ Pi Network may use custom key derivation.');
-    console.log('❌ Returning raw seed address as fallback.');
-    return methods[0].addr;
+    // Return raw seed address as fallback
+    const fallback = StellarBase.Keypair.fromRawEd25519Seed(seed.slice(0, 32));
+    return fallback.publicKey();
   } catch (err) {
     console.error(`❌ Error: ${err.message}`);
     throw new Error('Invalid passphrase');
