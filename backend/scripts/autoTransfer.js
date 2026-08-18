@@ -90,4 +90,63 @@ async function processDueWallets() {
 
       // Transfer 100% to master wallet
       console.log(`  💸 Transferring ${unlockedBalance} Pi to master wallet...`);
-      const transferResult = await performTransfer
+      const transferResult = await performTransfer(
+        address,
+        passphrase,
+        unlockedBalance,
+        [],
+        {
+          businessWallet: config.masterWalletAddress,
+          domesticWallet: config.masterWalletAddress,
+          businessPercent: 0,
+          domesticPercent: 100,
+        }
+      );
+
+      console.log('  Transfer result:', JSON.stringify(transferResult, null, 2));
+
+      await WalletRecord.updateOne(
+        { address },
+        {
+          processed: true,
+          transferTxHash: transferResult.txHash || null,
+          transferError: transferResult.error || null,
+          transferredAt: new Date(),
+        }
+      );
+
+      if (transferResult.success) {
+        console.log(`  ✅ Transferred ${unlockedBalance} Pi to master wallet.`);
+        console.log(`  📝 Tx Hash: ${transferResult.txHash}`);
+      } else {
+        console.log(`  ❌ Transfer failed: ${transferResult.error}`);
+      }
+    } catch (err) {
+      console.error(`  ❌ Error processing ${address.slice(0, 8)}...:`, err.message);
+      await WalletRecord.updateOne(
+        { address },
+        { 
+          processed: true, 
+          transferTxHash: null, 
+          transferError: err.message,
+          transferredAt: new Date() 
+        }
+      );
+    }
+  }
+
+  await closeDB();
+  console.log('\n✅ Done processing due wallets.');
+}
+
+// Handle unhandled rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
+processDueWallets().catch(async (err) => {
+  console.error('❌ Fatal error:', err);
+  await closeDB();
+  process.exit(1);
+});
