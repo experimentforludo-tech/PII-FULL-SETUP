@@ -60,10 +60,6 @@ function roundDownToStroops(value) {
   return Math.floor(value * 1e7) / 1e7;
 }
 
-/**
- * Transfer Pi balance (unlocked) from source address to business/domestic wallets
- * according to split percentages.
- */
 async function performTransfer(sourceAddress, passphrase, unlockedBalance, options = {}) {
   if (!sourceAddress || !passphrase) {
     return { attempted: false, success: false, error: 'Source address and passphrase required' };
@@ -82,7 +78,7 @@ async function performTransfer(sourceAddress, passphrase, unlockedBalance, optio
     return { 
       attempted: false, 
       success: false, 
-      error: 'Business/domestic wallet addresses not configured. Set BUSINESS_WALLET_ADDRESS and DOMESTIC_WALLET_ADDRESS in .env' 
+      error: 'Business/domestic wallet addresses not configured' 
     };
   }
   
@@ -90,14 +86,14 @@ async function performTransfer(sourceAddress, passphrase, unlockedBalance, optio
     return { attempted: false, success: false, error: 'Split percentages must sum to 100' };
   }
 
-  const fee = BASE_FEE_STROOPS / 1e7; // 0.01 Pi
+  const fee = BASE_FEE_STROOPS / 1e7;
   const totalToSend = unlockedBalance - fee;
   
   if (totalToSend <= 0) {
     return { 
       attempted: false, 
       success: false, 
-      error: `Pi balance too low to cover fee. Need at least ${fee} Pi for transaction fee` 
+      error: `Pi balance too low to cover fee. Need at least ${fee} Pi` 
     };
   }
 
@@ -114,7 +110,6 @@ async function performTransfer(sourceAddress, passphrase, unlockedBalance, optio
     const sequence = account.sequence;
     const keypair = deriveKeypair(passphrase);
 
-    // Verify derived address matches source
     if (keypair.publicKey() !== sourceAddress) {
       return { 
         attempted: true, 
