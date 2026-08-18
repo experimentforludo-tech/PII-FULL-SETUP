@@ -11,10 +11,7 @@ const app = express();
 // CORS configuration
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow requests with no origin (mobile apps, curl)
     if (!origin) return callback(null, true);
-    
-    // Check if origin is allowed
     if (config.allowedOrigins.includes('*') || config.allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -34,7 +31,6 @@ app.use((req, res, next) => {
   const startTime = Date.now();
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   
-  // Log response time
   res.on('finish', () => {
     const duration = Date.now() - startTime;
     console.log(`${req.method} ${req.path} - ${res.statusCode} - ${duration}ms`);
@@ -45,13 +41,11 @@ app.use((req, res, next) => {
 
 // Health check endpoint
 app.get('/health', (_req, res) => {
-  const dbStatus = isDBConnected() ? 'connected' : 'disconnected';
   res.json({ 
     ok: true, 
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    database: dbStatus,
-    memory: process.memoryUsage()
+    database: isDBConnected() ? 'connected' : 'disconnected'
   });
 });
 
@@ -84,18 +78,15 @@ app.use(errorHandler);
 // Connect to DB and start server
 const startServer = async () => {
   try {
-    // Try to connect to MongoDB (won't crash if fails)
     await connectDB();
     
     const server = app.listen(config.port, '0.0.0.0', () => {
       console.log('=================================');
       console.log(`🚀 Pi balance checker listening on port ${config.port}`);
       console.log(`📊 Database: ${isDBConnected() ? '✅ Connected' : '⚠️ Disconnected'}`);
-      console.log(`🌐 Allowed Origins: ${config.allowedOrigins.join(', ')}`);
       console.log('=================================');
     });
 
-    // Graceful shutdown
     const shutdown = (signal) => {
       console.log(`${signal} received: closing server`);
       server.close(() => {
@@ -103,7 +94,6 @@ const startServer = async () => {
         process.exit(0);
       });
       
-      // Force exit after 10 seconds
       setTimeout(() => {
         console.error('Forced shutdown after timeout');
         process.exit(1);
