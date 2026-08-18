@@ -1,7 +1,7 @@
 // backend/services/piService.js
 const config = require('../config');
 
-const FETCH_TIMEOUT_MS = 10_000;
+const FETCH_TIMEOUT_MS = 30_000; // Increased to 30 seconds
 
 function isPlausibleAddress(address) {
   return typeof address === 'string' && /^G[A-Z2-7]{55}$/.test(address.trim());
@@ -12,7 +12,16 @@ async function fetchJson(url) {
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
     const res = await fetch(url, { signal: controller.signal });
-    return { ok: res.ok, status: res.status, data: res.ok ? await res.json() : null };
+    return { 
+      ok: res.ok, 
+      status: res.status, 
+      data: res.ok ? await res.json() : null 
+    };
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error(`Request timed out after ${FETCH_TIMEOUT_MS/1000} seconds`);
+    }
+    throw err;
   } finally {
     clearTimeout(timer);
   }
@@ -20,9 +29,11 @@ async function fetchJson(url) {
 
 async function fetchAccountBalances(address) {
   const { ok, status, data } = await fetchJson(`${config.piHorizonBaseUrl}/accounts/${address}`);
+  
   if (status === 404) {
     return { found: false, unlockedBalance: 0 };
   }
+  
   if (!ok) {
     throw new Error(`Explorer API returned HTTP ${status} for /accounts/${address}`);
   }
@@ -40,22 +51,65 @@ function extractUnlockDate(claimableBalanceRecord, address) {
   const claimant = (claimableBalanceRecord.claimants || []).find((c) => c.destination === address);
   if (!claimant) return null;
 
+  // Check for unconditional claim
+  if (claimant.predicate && claimant.predicate.unconditional === true) {
+    return new Date().toISOString();
+  }
+
   function findAbsBefore(predicate) {
     if (!predicate) return null;
-    if (predicate.not && predicate.not.abs_before) return predicate.not.abs_before;
+    
+    // Direct abs_before
+    if (predicate.abs_before) {
+      return normalizeDate(predicate.abs_before);
+    }
+    
+    // Not predicate
+    if (predicate.not && predicate.not.abs_before) {
+      return normalizeDate(predicate.not.abs_before);
+    }
+    
+    // AND predicate
     if (predicate.and) {
       for (const p of predicate.and) {
         const found = findAbsBefore(p);
         if (found) return found;
       }
     }
+    
+    // OR predicate - return earliest
     if (predicate.or) {
+      const dates = [];
       for (const p of predicate.or) {
         const found = findAbsBefore(p);
-        if (found) return found;
+        if (found) dates.push(found);
+      }
+      if (dates.length > 0) {
+        return dates.sort()[0];
       }
     }
+    
     return null;
+  }
+
+  function normalizeDate(dateValue) {
+    if (!dateValue) return null;
+    
+    // If timestamp (number)
+    if (typeof dateValue === 'number') {
+      return new Date(dateValue * 1000).toISOString();
+    }
+    
+    // If string date
+    if (typeof dateValue === 'string') {
+      try {
+        return new Date(dateValue).toISOString();
+      } catch {
+        return dateValue;
+      }
+    }
+    
+    return dateValue;
   }
 
   return findAbsBefore(claimant.predicate);
@@ -69,6 +123,7 @@ async function fetchLockedBalances(address) {
   while (url && guard < 20) {
     guard += 1;
     const { ok, status, data } = await fetchJson(url);
+    
     if (!ok) {
       if (status === 404) break;
       throw new Error(`Explorer API returned HTTP ${status} for /claimable_balances`);
@@ -95,6 +150,7 @@ async function fetchLockedBalances(address) {
     .map((r) => r.unlockDate)
     .filter(Boolean)
     .sort();
+  
   const nextUnlockDate = futureUnlocks.length > 0 ? futureUnlocks[0] : null;
 
   return { lockedBalance, nextUnlockDate, lockedBreakdown };
@@ -116,9 +172,12 @@ async function getAccountDetails(address) {
   }
 
   try {
+    console.log(`🔍 Fetching account details for ${trimmed.slice(0, 8)}...`);
+    
     const accountInfo = await fetchAccountBalances(trimmed);
 
     if (!accountInfo.found) {
+      console.log(`❌ Account not found: ${trimmed.slice(0, 8)}...`);
       return {
         address: trimmed,
         status: 'not_found',
@@ -131,6 +190,8 @@ async function getAccountDetails(address) {
     }
 
     const lockedInfo = await fetchLockedBalances(trimmed);
+    
+    console.log(`✅ Account ${trimmed.slice(0, 8)}... - Unlocked: ${accountInfo.unlockedBalance} Pi, Locked: ${lockedInfo.lockedBalance} Pi`);
 
     return {
       address: trimmed,
@@ -143,6 +204,7 @@ async function getAccountDetails(address) {
     };
   } catch (err) {
     const message = err.name === 'AbortError' ? 'Request timed out' : err.message;
+    console.error(`❌ Error fetching ${trimmed.slice(0, 8)}...: ${message}`);
     return {
       address: trimmed,
       status: 'error',
@@ -162,11 +224,14 @@ async function getAccountsDetails(addresses, concurrency = 5) {
   async function worker() {
     while (queue.length > 0) {
       const address = queue.shift();
-      results.push(await getAccountDetails(address));
+      if (address) {
+        results.push(await getAccountDetails(address));
+      }
     }
   }
 
-  const workers = Array.from({ length: Math.min(concurrency, addresses.length) }, worker);
+  const workerCount = Math.min(concurrency, addresses.length);
+  const workers = Array.from({ length: workerCount }, worker);
   await Promise.all(workers);
 
   const order = new Map(addresses.map((a, i) => [a.trim(), i]));
