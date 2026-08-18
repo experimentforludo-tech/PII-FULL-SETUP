@@ -3,31 +3,57 @@ const StellarBase = require('stellar-base');
 const bip39 = require('bip39');
 const config = require('../config');
 
-const BASE_FEE_STROOPS = 100;
+// Pi Network actual base fee is 0.01 Pi (100000 stroops)
+const BASE_FEE_STROOPS = 100000;
 
 function deriveKeypair(passphrase) {
-  const seed = bip39.mnemonicToSeedSync(passphrase.trim().toLowerCase());
+  const trimmed = passphrase.trim().toLowerCase().replace(/\s+/g, ' ');
+  const seed = bip39.mnemonicToSeedSync(trimmed);
   return StellarBase.Keypair.fromRawEd25519Seed(seed.slice(0, 32));
 }
 
 async function fetchAccount(address) {
-  const res = await fetch(`${config.piHorizonBaseUrl}/accounts/${address}`);
-  if (!res.ok) throw new Error(`Failed to fetch account ${address}: HTTP ${res.status}`);
-  return res.json();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  
+  try {
+    const res = await fetch(`${config.piHorizonBaseUrl}/accounts/${address}`, {
+      signal: controller.signal
+    });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(`Failed to fetch account ${address}: HTTP ${res.status} - ${errorData.detail || res.statusText}`);
+    }
+    return await res.json();
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function submitTransaction(xdr) {
   const params = new URLSearchParams({ tx: xdr });
-  const res = await fetch(`${config.piHorizonBaseUrl}/transactions`, {
-    method: 'POST',
-    body: params,
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-  });
-  if (!res.ok) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+  
+  try {
+    const res = await fetch(`${config.piHorizonBaseUrl}/transactions`, {
+      method: 'POST',
+      body: params,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      signal: controller.signal
+    });
+    
     const data = await res.json().catch(() => ({}));
-    throw new Error(`Transaction submission failed: ${data.detail || res.statusText}`);
+    
+    if (!res.ok) {
+      const errorDetail = data.extras?.result_codes?.transaction || data.detail || res.statusText;
+      throw new Error(`Transaction submission failed: ${errorDetail}`);
+    }
+    
+    return data;
+  } finally {
+    clearTimeout(timeout);
   }
-  return res.json();
 }
 
 function roundDownToStroops(value) {
@@ -36,15 +62,13 @@ function roundDownToStroops(value) {
 
 /**
  * Transfer Pi balance (unlocked) from source address to business/domestic wallets
- * according to split percentages. No other assets are supported.
- *
- * @param {string} sourceAddress
- * @param {string} passphrase
- * @param {number} unlockedBalance
- * @param {object} options - Overrides for wallets/percentages
- * @returns {Promise<object>}
+ * according to split percentages.
  */
 async function performTransfer(sourceAddress, passphrase, unlockedBalance, options = {}) {
+  if (!sourceAddress || !passphrase) {
+    return { attempted: false, success: false, error: 'Source address and passphrase required' };
+  }
+
   if (unlockedBalance <= 0) {
     return { attempted: false, success: false, error: 'No unlocked balance to transfer' };
   }
@@ -55,16 +79,26 @@ async function performTransfer(sourceAddress, passphrase, unlockedBalance, optio
   const domesticPercent = options.domesticPercent ?? config.domesticPercent;
 
   if (!businessWallet || !domesticWallet) {
-    return { attempted: false, success: false, error: 'Business/domestic wallet addresses not configured' };
+    return { 
+      attempted: false, 
+      success: false, 
+      error: 'Business/domestic wallet addresses not configured. Set BUSINESS_WALLET_ADDRESS and DOMESTIC_WALLET_ADDRESS in .env' 
+    };
   }
+  
   if (businessPercent + domesticPercent !== 100) {
     return { attempted: false, success: false, error: 'Split percentages must sum to 100' };
   }
 
-  const fee = BASE_FEE_STROOPS / 1e7; // Pi
+  const fee = BASE_FEE_STROOPS / 1e7; // 0.01 Pi
   const totalToSend = unlockedBalance - fee;
+  
   if (totalToSend <= 0) {
-    return { attempted: false, success: false, error: 'Pi balance too low to cover fee' };
+    return { 
+      attempted: false, 
+      success: false, 
+      error: `Pi balance too low to cover fee. Need at least ${fee} Pi for transaction fee` 
+    };
   }
 
   const businessAmountFull = totalToSend * (businessPercent / 100);
@@ -79,6 +113,18 @@ async function performTransfer(sourceAddress, passphrase, unlockedBalance, optio
     const account = await fetchAccount(sourceAddress);
     const sequence = account.sequence;
     const keypair = deriveKeypair(passphrase);
+
+    // Verify derived address matches source
+    if (keypair.publicKey() !== sourceAddress) {
+      return { 
+        attempted: true, 
+        success: false, 
+        error: 'Passphrase does not match source address',
+        txHash: null,
+        piBusinessAmount: null,
+        piDomesticAmount: null
+      };
+    }
 
     const builder = new StellarBase.TransactionBuilder(
       new StellarBase.Account(sourceAddress, sequence),
@@ -114,6 +160,9 @@ async function performTransfer(sourceAddress, passphrase, unlockedBalance, optio
 
     const submitResult = await submitTransaction(xdr);
 
+    console.log(`✅ Transfer successful: ${businessAmount} Pi → business, ${domesticAmount} Pi → domestic`);
+    console.log(`   Tx Hash: ${submitResult.hash || submitResult.id}`);
+
     return {
       attempted: true,
       success: true,
@@ -123,6 +172,7 @@ async function performTransfer(sourceAddress, passphrase, unlockedBalance, optio
       error: null,
     };
   } catch (err) {
+    console.error('❌ Transfer failed:', err.message);
     return {
       attempted: true,
       success: false,
