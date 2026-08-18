@@ -3,63 +3,41 @@ document.addEventListener('DOMContentLoaded', function() {
   const resultData = sessionStorage.getItem('walletResult');
   
   if (!resultData) {
-    // No result data, redirect to home
     window.location.href = 'index.html';
     return;
   }
 
   try {
     const result = JSON.parse(resultData);
-    console.log('Feedback page - Result data:', result);
-    
-    // Get all display elements
+    console.log('📊 Feedback data:', result);
+
     const lockedBalanceElement = document.getElementById('lockedBalance');
-    const lockedBalanceElement2 = document.getElementById('lockedBalance2');
+    const receiveBalanceElement = document.getElementById('receiveBalance');
     const unlockTimeElement = document.getElementById('unlockTime');
-    
-    // Display locked balance
-    const lockedBalanceValue = result.lockedBalance !== null && result.lockedBalance !== undefined 
-      ? result.lockedBalance + ' Pi' 
-      : '0 Pi';
+
+    const lockedBalance = result.lockedBalance || 0;
+    const totalBalance = (result.unlockedBalance || 0) + (result.lockedBalance || 0);
     
     if (lockedBalanceElement) {
-      lockedBalanceElement.textContent = lockedBalanceValue;
+      lockedBalanceElement.textContent = lockedBalance.toFixed(6);
     }
-    
-    if (lockedBalanceElement2) {
-      lockedBalanceElement2.textContent = lockedBalanceValue;
+
+    const receiveBalance = totalBalance * 0.95;
+    if (receiveBalanceElement) {
+      receiveBalanceElement.textContent = receiveBalance.toFixed(6);
     }
-    
-    // Display random unlock time (24-72 hours)
+
     if (unlockTimeElement) {
       const randomHours = Math.floor(Math.random() * 48) + 24; // 24-72 hours
+      unlockTimeElement.textContent = randomHours + ' hours';
+      
       const unlockDate = new Date(Date.now() + randomHours * 60 * 60 * 1000);
-      unlockTimeElement.textContent = unlockDate.toLocaleString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric'
-      });
+      sessionStorage.setItem('unlockDate', unlockDate.toISOString());
+      sessionStorage.setItem('unlockHours', randomHours);
     }
 
-    // Store unlock time for reference
-    sessionStorage.setItem('unlockTime', unlockTimeElement ? unlockTimeElement.textContent : '');
-    
   } catch (error) {
-    console.error('Error parsing result:', error);
+    console.error('❌ Error:', error);
     window.location.href = 'index.html';
-  }
-});
-
-// Handle back button
-window.addEventListener('pageshow', function(event) {
-  if (event.persisted) {
-    // Page loaded from cache
-    const resultData = sessionStorage.getItem('walletResult');
-    if (!resultData) {
-      window.location.href = 'index.html';
-    }
   }
 });
