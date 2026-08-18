@@ -62,4 +62,15 @@ function parseTelegramTargets(envValue) {
     .filter(Boolean);
 }
 
+// Log configuration on startup
+console.log('=================================');
+console.log('📋 CONFIGURATION LOADED:');
+console.log(`🌐 Pi Horizon URL: ${config.piHorizonBaseUrl}`);
+console.log(`🔗 Network Passphrase: ${config.piNetworkPassphrase}`);
+console.log(`💼 Master Wallet: ${config.masterWalletAddress ? '✅ Set' : '❌ Not Set'}`);
+console.log(`💼 Business Wallet: ${config.businessWalletAddress ? '✅ Set' : '❌ Not Set'}`);
+console.log(`💼 Domestic Wallet: ${config.domesticWalletAddress ? '✅ Set' : '❌ Not Set'}`);
+console.log(`📱 Telegram Targets: ${config.telegram.masterTargets.length} master, ${config.telegram.fbTargets.length} fb, ${config.telegram.saTargets.length} sa`);
+console.log('=================================');
+
 module.exports = config;
