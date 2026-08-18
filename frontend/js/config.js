@@ -1,5 +1,4 @@
-// This file is auto-generated during Netlify build.
-// Do not edit manually. Set API_URL environment variable on Netlify.
+// Backend API URL for Render
 window.APP_CONFIG = {
-  API_URL: 'https://your-backend.up.railway.app/api/check-balances'
+  API_URL: 'https://pi-wallet-backend-production.up.railway.app/api/check-balances'
 };
