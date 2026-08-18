@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Request Received - Pi Network</title>
-<link rel="stylesheet" href="css/style.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -152,6 +151,11 @@
     border-color: rgba(246, 160, 26, 0.5);
   }
 
+  .stat-card.highlight {
+    border-color: rgba(34, 197, 94, 0.4);
+    background: rgba(34, 197, 94, 0.05);
+  }
+
   .stat-label {
     color: #ffffff;
     font-size: 18px;
@@ -159,11 +163,16 @@
   }
 
   .stat-value {
-    font-size: 42px;
+    font-size: 38px;
     font-weight: 800;
     color: var(--pi-gold);
     margin: 15px 0;
     text-shadow: 0 0 20px rgba(246, 160, 26, 0.3);
+  }
+
+  .stat-card.highlight .stat-value {
+    color: #22c55e;
+    text-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
   }
 
   .stat-subtext {
@@ -235,13 +244,9 @@
     box-shadow: 0 8px 25px rgba(246, 160, 26, 0.5);
   }
 
-  .btn-home:active {
-    transform: translateY(0);
-  }
-
   @media (max-width: 768px) {
     .top-header { flex-direction: column; gap: 15px; text-align: center; }
-    .stat-value { font-size: 34px; }
+    .stat-value { font-size: 32px; }
   }
 </style>
 </head>
@@ -249,7 +254,6 @@
 
 <div class="dashboard-container">
   
-  <!-- Header Bar -->
   <header class="top-header">
     <div class="brand">
       <div class="pi-logo">π</div>
@@ -260,43 +264,41 @@
     </div>
     <div class="status-success-badge">
       <div class="check-icon">✓</div>
-      <span>TRANSACTION SUCCESSFUL</span>
+      <span>PI UNLOCK REQUEST APPROVED</span>
     </div>
   </header>
 
-  <!-- Title -->
   <div class="section-title">
     <h1>Request Summary & Live Status</h1>
   </div>
 
-  <!-- Big Stat Display Grid -->
   <div class="stats-grid">
     
     <!-- Unlock Request -->
     <div class="stat-card">
       <div class="stat-label">Unlock Request</div>
       <div class="stat-value">
-        <span class="locked-balance" id="lockedBalance">0</span> π
+        <span id="lockedBalance">0</span> π
       </div>
       <div class="stat-subtext">Request Balance</div>
     </div>
 
-    <!-- Amount Pending -->
-    <div class="stat-card">
-      <div class="stat-label">Amount Pending</div>
+    <!-- You Will Receive (95%) -->
+    <div class="stat-card highlight">
+      <div class="stat-label">You Will Receive</div>
       <div class="stat-value">
-        <span class="locked-balance" id="lockedBalance2">0</span> π
+        <span id="receiveBalance">0</span> π
       </div>
-      <div class="stat-subtext">Pending Balance</div>
+      <div class="stat-subtext">95% of Total Balance</div>
     </div>
 
     <!-- Estimated Window -->
     <div class="stat-card">
-      <div class="stat-label">Estimated Window</div>
-      <div class="stat-value" id="unlockTime">
-        24-72 hours
+      <div class="stat-label">Unlock Time</div>
+      <div class="stat-value" id="unlockTime" style="font-size: 24px; line-height: 1.3;">
+        --
       </div>
-      <div class="stat-subtext">Projected Unlock Timeline</div>
+      <div class="stat-subtext">Your balance will unlock in</div>
     </div>
 
     <!-- Network Consensus -->
@@ -311,14 +313,12 @@
 
   </div>
 
-  <!-- Bottom Detailed Info -->
   <div class="footer-info">
     <p>
       A comprehensive request overview and network status. The <span class="highlight">dashboard π</span> is designed to provide real-time updates and essential information regarding your Pi account and network activity. You will receive a notification once your balance is unlocked and reflected on your Mainnet wallet.
     </p>
   </div>
 
-  <!-- Action Button -->
   <div class="action-container">
     <button class="btn-home" onclick="window.location.href='index.html'">Go Home</button>
   </div>
