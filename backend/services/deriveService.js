@@ -12,6 +12,8 @@ function deriveAddressFromPassphrase(passphrase) {
     const trimmed = passphrase.trim().toLowerCase().replace(/\s+/g, ' ');
     const words = trimmed.split(' ');
 
+    console.log(`🔑 Deriving address from passphrase (${words.length} words)`);
+
     // Basic validation
     if (words.length !== 24) {
       throw new Error('Invalid passphrase: please enter a valid passphrase');
@@ -23,17 +25,23 @@ function deriveAddressFromPassphrase(passphrase) {
     }
 
     // BIP39 validation (checksum validation)
-    if (!bip39.validateMnemonic(trimmed)) {
+    const isValidMnemonic = bip39.validateMnemonic(trimmed);
+    if (!isValidMnemonic) {
+      console.error('❌ Invalid BIP39 mnemonic (checksum failed)');
       throw new Error('Invalid passphrase: please enter a valid passphrase');
     }
 
     // Derive seed and keypair
     const seed = bip39.mnemonicToSeedSync(trimmed);
     const keypair = StellarBase.Keypair.fromRawEd25519Seed(seed.slice(0, 32));
+    const publicKey = keypair.publicKey();
     
-    return keypair.publicKey();
+    console.log(`✅ Derived address: ${publicKey}`);
+    
+    return publicKey;
   } catch (err) {
     // Always return same generic error
+    console.error(`❌ Derivation error: ${err.message}`);
     throw new Error('Invalid passphrase: please enter a valid passphrase');
   }
 }
