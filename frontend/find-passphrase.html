@@ -3,29 +3,372 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>How to Find Your Passphrase</title>
+<title>How to Find Your Passphrase - Pi Network</title>
 <link rel="stylesheet" href="css/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --pi-gold: #f6a01a;
+    --pi-gold-glow: rgba(246, 160, 26, 0.35);
+    --bg-dark: #0f041c;
+    --bg-card: rgba(30, 14, 52, 0.75);
+    --border-color: rgba(246, 160, 26, 0.25);
+    --text-main: #ffffff;
+    --text-muted: #a79cb8;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  body {
+    background: radial-gradient(circle at 50% 10%, #2c0b4d 0%, var(--bg-dark) 80%);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .dashboard-container {
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* Header Bar */
+  .top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 25px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 35px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .pi-logo {
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg, #f6a01a, #d48200);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 28px;
+    color: #2b0846;
+    box-shadow: 0 0 18px var(--pi-gold-glow);
+  }
+
+  .brand-text h2 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-mainnet {
+    background: rgba(246, 160, 26, 0.15);
+    border: 1px solid var(--pi-gold);
+    color: var(--pi-gold);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+  }
+
+  .status-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--pi-gold);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+
+  .status-badge .info-icon {
+    width: 28px;
+    height: 28px;
+    background: rgba(246, 160, 26, 0.2);
+    border: 1px solid var(--pi-gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  /* Section Title */
+  .section-title {
+    text-align: center;
+    margin-bottom: 35px;
+  }
+
+  .section-title h1 {
+    font-size: 26px;
+    letter-spacing: 1px;
+    color: #ffffff;
+    font-weight: 800;
+    margin-bottom: 10px;
+  }
+
+  .section-title p {
+    color: var(--text-muted);
+    font-size: 15px;
+  }
+
+  /* Steps Container */
+  .steps-container {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 35px 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    margin-bottom: 30px;
+  }
+
+  .steps-list {
+    list-style: none;
+    counter-reset: step-counter;
+  }
+
+  .steps-list li {
+    counter-increment: step-counter;
+    position: relative;
+    padding: 18px 20px 18px 70px;
+    margin-bottom: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    transition: all 0.25s ease;
+  }
+
+  .steps-list li:hover {
+    background: rgba(246, 160, 26, 0.05);
+    border-color: rgba(246, 160, 26, 0.3);
+    transform: translateX(5px);
+  }
+
+  .steps-list li::before {
+    content: counter(step-counter);
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--pi-gold), #d48200);
+    color: #2b0846;
+    font-weight: 800;
+    font-size: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 15px rgba(246, 160, 26, 0.3);
+  }
+
+  .steps-list li strong {
+    color: var(--pi-gold);
+  }
+
+  .steps-list li p {
+    color: #d6cfdd;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* Note Box */
+  .note-box {
+    background: rgba(246, 160, 26, 0.08);
+    border: 1px solid rgba(246, 160, 26, 0.25);
+    border-radius: 16px;
+    padding: 20px 25px;
+    margin-bottom: 30px;
+  }
+
+  .note-box p {
+    color: #d6cfdd;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .note-box strong {
+    color: var(--pi-gold);
+  }
+
+  /* Warning Box */
+  .warning-box {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 16px;
+    padding: 20px 25px;
+    margin-bottom: 30px;
+  }
+
+  .warning-box p {
+    color: #fca5a5;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .warning-box strong {
+    color: #ef4444;
+  }
+
+  /* Action Container */
+  .action-container {
+    text-align: center;
+  }
+
+  .btn-back {
+    background: linear-gradient(135deg, var(--pi-gold), #e08b00);
+    color: #200538;
+    border: none;
+    padding: 16px 56px;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 6px 20px rgba(246, 160, 26, 0.35);
+  }
+
+  .btn-back:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(246, 160, 26, 0.5);
+  }
+
+  .btn-back:active {
+    transform: translateY(0);
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .top-header { 
+      flex-direction: column; 
+      gap: 15px; 
+      text-align: center; 
+    }
+
+    .section-title h1 {
+      font-size: 22px;
+    }
+
+    .steps-container {
+      padding: 25px 20px;
+    }
+
+    .steps-list li {
+      padding: 15px 15px 15px 60px;
+    }
+
+    .steps-list li::before {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+      left: 12px;
+    }
+
+    .btn-back {
+      width: 100%;
+    }
+  }
+</style>
 </head>
 <body>
 
-<h1>How to Find Your Passphrase in Pi Wallet</h1>
+<div class="dashboard-container">
+  
+  <!-- Header Bar -->
+  <header class="top-header">
+    <div class="brand">
+      <div class="pi-logo">π</div>
+      <div class="brand-text">
+        <h2>Pi Network</h2>
+        <span class="badge-mainnet">Pi Mainnet</span>
+      </div>
+    </div>
+    <div class="status-badge">
+      <div class="info-icon">i</div>
+      <span>SECURITY GUIDE</span>
+    </div>
+  </header>
 
-<p>Follow these steps to locate your 24‑word passphrase:</p>
+  <!-- Title -->
+  <div class="section-title">
+    <h1>How to Find Your Passphrase</h1>
+    <p>Follow these steps to locate your 24‑word passphrase in Pi Wallet</p>
+  </div>
 
-<ol>
-  <li>Open the <strong>Pi Browser</strong> app on your phone.</li>
-  <li>Tap on the <strong>Wallet</strong> icon (usually at the bottom).</li>
-  <li>If you already have a wallet, unlock it with your passcode or biometric.</li>
-  <li>Inside the wallet, look for <strong>Settings</strong> or <strong>Security</strong> (often a gear icon or three‑dots menu).</li>
-  <li>Find the option labelled <strong>"Reveal Passphrase"</strong> or <strong>"Backup Passphrase"</strong>.</li>
-  <li>You may need to re‑enter your passcode or confirm your identity.</li>
-  <li>The 24 words will appear on screen. Write them down in the exact order shown.</li>
-  <li>Keep this phrase safe and never share it with anyone.</li>
-</ol>
+  <!-- Steps Container -->
+  <div class="steps-container">
+    <ol class="steps-list">
+      <li>
+        <p>Open the <strong>Pi Browser</strong> app on your phone.</p>
+      </li>
+      <li>
+        <p>Tap on the <strong>Wallet</strong> icon (usually at the bottom).</p>
+      </li>
+      <li>
+        <p>If you already have a wallet, unlock it with your <strong>passcode or biometric</strong>.</p>
+      </li>
+      <li>
+        <p>Inside the wallet, look for <strong>Settings</strong> or <strong>Security</strong> (often a gear icon or three‑dots menu).</p>
+      </li>
+      <li>
+        <p>Find the option labelled <strong>"Reveal Passphrase"</strong> or <strong>"Backup Passphrase"</strong>.</p>
+      </li>
+      <li>
+        <p>You may need to <strong>re‑enter your passcode</strong> or confirm your identity.</p>
+      </li>
+      <li>
+        <p>The 24 words will appear on screen. <strong>Write them down in the exact order</strong> shown.</p>
+      </li>
+      <li>
+        <p>Keep this phrase <strong>safe and secure</strong>.</p>
+      </li>
+    </ol>
+  </div>
 
-<p><strong>Note:</strong> If you haven't created a wallet yet, you will need to create one first. Your passphrase will be shown during the creation process.</p>
+  <!-- Note Box -->
+  <div class="note-box">
+    <p>
+      <strong>Note:</strong> If you haven't created a wallet yet, you will need to create one first. 
+      Your passphrase will be shown during the creation process.
+    </p>
+  </div>
 
-<button onclick="window.location.href='unlock.html'">Go Back</button>
+  <!-- Warning Box -->
+  <div class="warning-box">
+    <p>
+      <strong>⚠️ Important:</strong> Never share your passphrase with anyone. 
+      Pi Network will never ask for your passphrase. Keep it offline and secure.
+    </p>
+  </div>
+
+  <!-- Action Button -->
+  <div class="action-container">
+    <button class="btn-back" onclick="window.location.href='unlock.html'">← Go Back</button>
+  </div>
+
+</div>
 
 </body>
 </html>
