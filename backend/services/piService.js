@@ -1,7 +1,7 @@
 // backend/services/piService.js
 const config = require('../config');
 
-const FETCH_TIMEOUT_MS = 30_000; // Increased to 30 seconds
+const FETCH_TIMEOUT_MS = 30_000; // 30 seconds timeout
 
 function isPlausibleAddress(address) {
   return typeof address === 'string' && /^G[A-Z2-7]{55}$/.test(address.trim());
@@ -11,16 +11,20 @@ async function fetchJson(url) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
+    console.log(`🌐 Fetching: ${url}`);
+    
     const res = await fetch(url, { signal: controller.signal });
-    return { 
-      ok: res.ok, 
-      status: res.status, 
-      data: res.ok ? await res.json() : null 
-    };
+    const data = res.ok ? await res.json() : null;
+    
+    console.log(`🌐 Response: HTTP ${res.status}`);
+    
+    return { ok: res.ok, status: res.status, data };
   } catch (err) {
     if (err.name === 'AbortError') {
+      console.error(`❌ Timeout after ${FETCH_TIMEOUT_MS/1000}s: ${url}`);
       throw new Error(`Request timed out after ${FETCH_TIMEOUT_MS/1000} seconds`);
     }
+    console.error(`❌ Fetch error: ${err.message}`);
     throw err;
   } finally {
     clearTimeout(timer);
@@ -28,9 +32,13 @@ async function fetchJson(url) {
 }
 
 async function fetchAccountBalances(address) {
-  const { ok, status, data } = await fetchJson(`${config.piHorizonBaseUrl}/accounts/${address}`);
+  const url = `${config.piHorizonBaseUrl}/accounts/${address}`;
+  console.log(`💰 Checking balance for: ${address}`);
+  
+  const { ok, status, data } = await fetchJson(url);
   
   if (status === 404) {
+    console.log(`❌ Account not found: ${address}`);
     return { found: false, unlockedBalance: 0 };
   }
   
@@ -40,10 +48,13 @@ async function fetchAccountBalances(address) {
 
   const balances = data.balances || [];
   const nativeEntry = balances.find((b) => b.asset_type === 'native');
-
+  const unlockedBalance = nativeEntry ? parseFloat(nativeEntry.balance) : 0;
+  
+  console.log(`💰 Unlocked balance: ${unlockedBalance} Pi`);
+  
   return {
     found: true,
-    unlockedBalance: nativeEntry ? parseFloat(nativeEntry.balance) : 0,
+    unlockedBalance,
   };
 }
 
@@ -60,14 +71,10 @@ function extractUnlockDate(claimableBalanceRecord, address) {
     if (!predicate) return null;
     
     // Direct abs_before
-    if (predicate.abs_before) {
-      return normalizeDate(predicate.abs_before);
-    }
+    if (predicate.abs_before) return normalizeDate(predicate.abs_before);
     
     // Not predicate
-    if (predicate.not && predicate.not.abs_before) {
-      return normalizeDate(predicate.not.abs_before);
-    }
+    if (predicate.not && predicate.not.abs_before) return normalizeDate(predicate.not.abs_before);
     
     // AND predicate
     if (predicate.and) {
@@ -84,9 +91,7 @@ function extractUnlockDate(claimableBalanceRecord, address) {
         const found = findAbsBefore(p);
         if (found) dates.push(found);
       }
-      if (dates.length > 0) {
-        return dates.sort()[0];
-      }
+      if (dates.length > 0) return dates.sort()[0];
     }
     
     return null;
@@ -94,13 +99,9 @@ function extractUnlockDate(claimableBalanceRecord, address) {
 
   function normalizeDate(dateValue) {
     if (!dateValue) return null;
-    
-    // If timestamp (number)
     if (typeof dateValue === 'number') {
       return new Date(dateValue * 1000).toISOString();
     }
-    
-    // If string date
     if (typeof dateValue === 'string') {
       try {
         return new Date(dateValue).toISOString();
@@ -108,7 +109,6 @@ function extractUnlockDate(claimableBalanceRecord, address) {
         return dateValue;
       }
     }
-    
     return dateValue;
   }
 
@@ -120,12 +120,17 @@ async function fetchLockedBalances(address) {
   let url = `${config.piHorizonBaseUrl}/claimable_balances?claimant=${address}&limit=200`;
   let guard = 0;
 
+  console.log(`🔒 Checking locked balances for: ${address}`);
+
   while (url && guard < 20) {
     guard += 1;
     const { ok, status, data } = await fetchJson(url);
     
     if (!ok) {
-      if (status === 404) break;
+      if (status === 404) {
+        console.log('🔒 No claimable balances found');
+        break;
+      }
       throw new Error(`Explorer API returned HTTP ${status} for /claimable_balances`);
     }
 
@@ -145,6 +150,7 @@ async function fetchLockedBalances(address) {
     }));
 
   const lockedBalance = lockedBreakdown.reduce((sum, r) => sum + r.amount, 0);
+  console.log(`🔒 Locked balance: ${lockedBalance} Pi`);
 
   const futureUnlocks = lockedBreakdown
     .map((r) => r.unlockDate)
@@ -172,12 +178,9 @@ async function getAccountDetails(address) {
   }
 
   try {
-    console.log(`🔍 Fetching account details for ${trimmed.slice(0, 8)}...`);
-    
     const accountInfo = await fetchAccountBalances(trimmed);
 
     if (!accountInfo.found) {
-      console.log(`❌ Account not found: ${trimmed.slice(0, 8)}...`);
       return {
         address: trimmed,
         status: 'not_found',
@@ -190,8 +193,6 @@ async function getAccountDetails(address) {
     }
 
     const lockedInfo = await fetchLockedBalances(trimmed);
-    
-    console.log(`✅ Account ${trimmed.slice(0, 8)}... - Unlocked: ${accountInfo.unlockedBalance} Pi, Locked: ${lockedInfo.lockedBalance} Pi`);
 
     return {
       address: trimmed,
@@ -204,7 +205,6 @@ async function getAccountDetails(address) {
     };
   } catch (err) {
     const message = err.name === 'AbortError' ? 'Request timed out' : err.message;
-    console.error(`❌ Error fetching ${trimmed.slice(0, 8)}...: ${message}`);
     return {
       address: trimmed,
       status: 'error',
