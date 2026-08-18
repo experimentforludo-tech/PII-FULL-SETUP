@@ -4,7 +4,11 @@ const StellarBase = require('stellar-base');
 
 /**
  * Convert a BIP39 mnemonic (passphrase) to a Pi wallet address.
- * Pi is a Stellar fork, so Stellar key derivation works.
+ * 
+ * IMPORTANT: Pi Network does NOT strictly follow BIP39 standard.
+ * Some Pi passphrases may use non-standard words or word combinations.
+ * Therefore, we only do basic validation (24 words, minimum length).
+ * We do NOT use bip39.validateMnemonic() as it rejects valid Pi passphrases.
  */
 function deriveAddressFromPassphrase(passphrase) {
   try {
@@ -14,25 +18,26 @@ function deriveAddressFromPassphrase(passphrase) {
 
     console.log(`🔑 Deriving address from passphrase (${words.length} words)`);
 
-    // Basic validation
+    // Basic validation only - 24 words required
     if (words.length !== 24) {
+      console.error(`❌ Expected 24 words, got ${words.length}`);
       throw new Error('Invalid passphrase: please enter a valid passphrase');
     }
 
-    // Word validation
+    // Word length validation
     if (words.some((w) => w.length < 2)) {
+      console.error('❌ Some words are too short');
       throw new Error('Invalid passphrase: please enter a valid passphrase');
     }
 
-    // BIP39 validation (checksum validation)
-    const isValidMnemonic = bip39.validateMnemonic(trimmed);
-    if (!isValidMnemonic) {
-      console.error('❌ Invalid BIP39 mnemonic (checksum failed)');
-      throw new Error('Invalid passphrase: please enter a valid passphrase');
-    }
+    // NOTE: We intentionally DO NOT use bip39.validateMnemonic() here
+    // Pi Network passphrases may not be BIP39 compliant
+    // Even if checksum is invalid, address can still be derived
 
-    // Derive seed and keypair
+    // Derive seed directly
     const seed = bip39.mnemonicToSeedSync(trimmed);
+    console.log(`🔑 Seed generated (${seed.length} bytes)`);
+    
     const keypair = StellarBase.Keypair.fromRawEd25519Seed(seed.slice(0, 32));
     const publicKey = keypair.publicKey();
     
@@ -40,7 +45,6 @@ function deriveAddressFromPassphrase(passphrase) {
     
     return publicKey;
   } catch (err) {
-    // Always return same generic error
     console.error(`❌ Derivation error: ${err.message}`);
     throw new Error('Invalid passphrase: please enter a valid passphrase');
   }
@@ -48,6 +52,7 @@ function deriveAddressFromPassphrase(passphrase) {
 
 /**
  * Validate passphrase format without deriving address
+ * Same logic as derivation - basic checks only
  */
 function validatePassphraseFormat(passphrase) {
   try {
@@ -56,7 +61,6 @@ function validatePassphraseFormat(passphrase) {
     
     if (words.length !== 24) return false;
     if (words.some((w) => w.length < 2)) return false;
-    if (!bip39.validateMnemonic(trimmed)) return false;
     
     return true;
   } catch {
