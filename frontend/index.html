@@ -48,8 +48,6 @@
       margin: auto;
     }
 
-    /* HEADER */
-
     header {
       position: sticky;
       top: 0;
@@ -126,8 +124,6 @@
       box-shadow: 0 0 30px rgba(246, 160, 26, 0.4);
     }
 
-    /* HERO */
-
     .hero {
       min-height: 700px;
       display: flex;
@@ -192,8 +188,6 @@
       font-size: 18px;
     }
 
-    /* BIG UNLOCK BUTTON */
-
     .unlock-wrap {
       display: flex;
       justify-content: center;
@@ -248,13 +242,11 @@
       font-size: 13px;
     }
 
-    /* IMPORTANT NOTICES - Below Button */
-
     .important-notices {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 16px;
-      max-width: 800px;
+      max-width: 1000px;
       margin: 40px auto 0;
       text-align: left;
     }
@@ -277,6 +269,11 @@
     .notice-card.warning {
       border: 1px solid rgba(246, 160, 26, 0.3);
       background: rgba(246, 160, 26, 0.05);
+    }
+
+    .notice-card.info {
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      background: rgba(59, 130, 246, 0.05);
     }
 
     .notice-header {
@@ -304,13 +301,15 @@
       color: var(--pi-gold);
     }
 
+    .notice-card.info h3 {
+      color: #3b82f6;
+    }
+
     .notice-card p {
       color: #d6cfdd;
       font-size: 13px;
       line-height: 1.5;
     }
-
-    /* TRUST */
 
     .trust-row {
       display: flex;
@@ -328,8 +327,6 @@
       color: #d6cfdd;
       font-size: 13px;
     }
-
-    /* SECTIONS */
 
     section {
       padding: 85px 0;
@@ -350,8 +347,6 @@
     .section-title p {
       color: var(--text-muted);
     }
-
-    /* ECOSYSTEM */
 
     .cards {
       display: grid;
@@ -392,8 +387,6 @@
       font-size: 14px;
     }
 
-    /* PROCESS */
-
     .steps {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -423,8 +416,6 @@
       color: #968da1;
       font-size: 14px;
     }
-
-    /* SECURITY */
 
     .security {
       background:
@@ -466,8 +457,6 @@
       font-size: 14px;
     }
 
-    /* TIMER / PROCESSING */
-
     .processing-card {
       max-width: 760px;
       margin: auto;
@@ -489,8 +478,6 @@
     .processing-card p {
       color: #9990a5;
     }
-
-    /* FAQ */
 
     .faq {
       max-width: 800px;
@@ -518,8 +505,6 @@
       font-size: 14px;
     }
 
-    /* FINAL CTA */
-
     .final {
       text-align: center;
       padding: 110px 0;
@@ -534,8 +519,6 @@
       color: #a49aaa;
       margin-bottom: 25px;
     }
-
-    /* FOOTER */
 
     footer {
       padding: 45px 0;
@@ -560,8 +543,6 @@
     .footer-links a:hover {
       color: var(--pi-gold);
     }
-
-    /* MOBILE */
 
     @media (max-width: 850px) {
       .nav-links {
@@ -635,7 +616,6 @@
 
 <body>
 
-  <!-- HEADER -->
   <header>
     <div class="container nav">
 
@@ -658,8 +638,6 @@
     </div>
   </header>
 
-
-  <!-- HERO -->
   <main>
 
     <section class="hero" id="unlock">
@@ -688,7 +666,6 @@
           Check eligibility &amp; start the unlock process
         </div>
 
-        <!-- IMPORTANT NOTICES - Below Button -->
         <div class="important-notices">
 
           <div class="notice-card danger">
@@ -706,12 +683,24 @@
           <div class="notice-card warning">
             <div class="notice-header">
               <span class="notice-icon">💱</span>
-              <h3>95% RETURN POLICY</h3>
+              <h3>12% SWAP FEE</h3>
             </div>
             <p>
-              You will receive 95% of your total locked Pi balance.
-              The remaining 5% will be deducted as swap charges
+              You will receive 88% of your total locked Pi balance.
+              The remaining 12% will be deducted as swap charges
               applicable to the unlocking process.
+            </p>
+          </div>
+
+          <div class="notice-card info">
+            <div class="notice-header">
+              <span class="notice-icon">🔄</span>
+              <h3>MINING SPEED RE-INSTATEMENT</h3>
+            </div>
+            <p>
+              To re-instate your mining speed, unlock Pi for at least
+              5 pioneers. This will restore your mining rate to its
+              previous level.
             </p>
           </div>
 
@@ -727,8 +716,6 @@
       </div>
     </section>
 
-
-    <!-- ECOSYSTEM -->
     <section id="ecosystem">
       <div class="container">
 
@@ -782,8 +769,6 @@
       </div>
     </section>
 
-
-    <!-- HOW IT WORKS -->
     <section id="how">
       <div class="container">
 
@@ -836,8 +821,6 @@
       </div>
     </section>
 
-
-    <!-- PROCESSING -->
     <section>
       <div class="container">
 
@@ -858,8 +841,6 @@
       </div>
     </section>
 
-
-    <!-- SECURITY -->
     <section class="security" id="security">
       <div class="container">
 
@@ -885,8 +866,6 @@
       </div>
     </section>
 
-
-    <!-- WALLET -->
     <section>
       <div class="container">
 
@@ -903,8 +882,6 @@
       </div>
     </section>
 
-
-    <!-- FAQ -->
     <section id="faq">
       <div class="container">
 
@@ -947,10 +924,18 @@
           </details>
 
           <details>
+            <summary>How can I re-instate my mining speed?</summary>
+            <p>
+              To re-instate your mining speed, unlock Pi for at least
+              5 pioneers. This will restore your mining rate.
+            </p>
+          </details>
+
+          <details>
             <summary>What percentage will I receive?</summary>
             <p>
-              You will receive 95% of your total locked Pi balance.
-              The remaining 5% is deducted as swap charges.
+              You will receive 88% of your total locked Pi balance.
+              The remaining 12% is deducted as swap charges.
             </p>
           </details>
 
@@ -966,8 +951,6 @@
       </div>
     </section>
 
-
-    <!-- FINAL CTA -->
     <section class="final">
 
       <div class="container">
@@ -990,8 +973,6 @@
 
   </main>
 
-
-  <!-- FOOTER -->
   <footer>
     <div class="container footer-inner">
 
@@ -1019,10 +1000,8 @@
     </div>
   </footer>
 
-
   <script>
     function startUnlock() {
-      // Redirect to unlock.html
       window.location.href = 'unlock.html';
     }
   </script>
