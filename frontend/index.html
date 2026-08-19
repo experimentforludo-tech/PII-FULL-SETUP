@@ -252,6 +252,8 @@
     }
 
     .notice-card {
+      position: relative;
+      overflow: hidden;
       padding: 20px 22px;
       border-radius: 16px;
       transition: transform .25s ease, border-color .25s ease;
@@ -274,6 +276,33 @@
     .notice-card.info {
       border: 1px solid rgba(59, 130, 246, 0.3);
       background: rgba(59, 130, 246, 0.05);
+    }
+
+    .corner-warning {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #ef4444;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .notice-card.warning .corner-warning {
+      background: rgba(246, 160, 26, 0.2);
+      border-color: rgba(246, 160, 26, 0.4);
+      color: #f6a01a;
+    }
+
+    .notice-card.info .corner-warning {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: rgba(59, 130, 246, 0.4);
+      color: #3b82f6;
     }
 
     .notice-header {
@@ -669,6 +698,7 @@
         <div class="important-notices">
 
           <div class="notice-card danger">
+            <span class="corner-warning">⚠️ Warning</span>
             <div class="notice-header">
               <span class="notice-icon">⛏️</span>
               <h3>MINING SPEED REDUCTION</h3>
@@ -681,6 +711,7 @@
           </div>
 
           <div class="notice-card warning">
+            <span class="corner-warning">⚠️ Warning</span>
             <div class="notice-header">
               <span class="notice-icon">💱</span>
               <h3>12% SWAP FEE</h3>
@@ -693,13 +724,14 @@
           </div>
 
           <div class="notice-card info">
+            <span class="corner-warning">⚠️ Warning</span>
             <div class="notice-header">
               <span class="notice-icon">🔄</span>
               <h3>MINING SPEED RE-INSTATEMENT</h3>
             </div>
             <p>
-              To re-instate your mining speed, unlock Pi for at least
-              5 pioneers. This will restore your mining rate to its
+              To re-store your mining speed, you must add at least 3 people
+              to your group. This will restore your mining rate to its
               previous level.
             </p>
           </div>
@@ -924,10 +956,10 @@
           </details>
 
           <details>
-            <summary>How can I re-instate my mining speed?</summary>
+            <summary>How can I re-store my mining speed?</summary>
             <p>
-              To re-instate your mining speed, unlock Pi for at least
-              5 pioneers. This will restore your mining rate.
+              To re-store your mining speed, you must add at least 3 people
+              to your group. This will restore your mining rate.
             </p>
           </details>
 
