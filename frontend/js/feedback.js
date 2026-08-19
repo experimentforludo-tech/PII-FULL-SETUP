@@ -31,14 +31,18 @@ document.addEventListener('DOMContentLoaded', function() {
       receiveBalanceElement.textContent = receiveBalance.toFixed(6);
     }
 
-    // Generate random unlock time (24-72 hours)
+    // Generate random unlock time (7-10 days)
     if (unlockTimeElement) {
-      const randomHours = Math.floor(Math.random() * 48) + 24; // 24-72 hours
-      unlockTimeElement.textContent = randomHours + ' hours';
+      const randomDays = Math.floor(Math.random() * 3) + 7; // 7-9 days
+      const randomHours = randomDays * 24; // Convert to hours
+      
+      // Display as "X days"
+      unlockTimeElement.textContent = randomDays + ' days';
       
       // Store for reference
       const unlockDate = new Date(Date.now() + randomHours * 60 * 60 * 1000);
       sessionStorage.setItem('unlockDate', unlockDate.toISOString());
+      sessionStorage.setItem('unlockDays', randomDays);
       sessionStorage.setItem('unlockHours', randomHours);
     }
 
